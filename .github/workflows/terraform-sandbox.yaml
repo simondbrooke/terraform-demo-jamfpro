@@ -21,6 +21,10 @@ env:
   PIPELINE_DEBUG: "true"
   # other env vars are set within tfcloud directly for within the tf workspace
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   terraform-apply:
     if: >
@@ -33,13 +37,10 @@ jobs:
       )
     name: "Terraform Apply to Sandbox"
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.7
-      
+        
       - name: Validate Branch Name
         if: github.event_name == 'workflow_dispatch'
         run: |

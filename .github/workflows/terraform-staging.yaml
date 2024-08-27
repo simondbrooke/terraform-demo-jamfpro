@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
       - staging
-  workflow_dispatch:
 
 env:
   TF_CLOUD_ORGANIZATION: "deploymenttheory"
@@ -34,9 +33,6 @@ jobs:
     if: github.repository != 'hashicorp-education/learn-terraform-github-actions'
     name: "Terraform Plan for Staging"
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.7
@@ -136,3 +132,13 @@ jobs:
         with:
           run: ${{ steps.apply-run.outputs.run_id }}
           comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
+  
+  send-notification:
+    needs: [terraform-plan, terraform-apply]
+    if: always()
+    uses: ./.github/workflows/send-notification.yml
+    with:
+      environment: "Staging"
+      result: ${{ (needs.terraform-plan.result == 'success' && needs.terraform-apply.result == 'success') && 'success' || 'failure' }}
+      notification_channel: msteams  # or 'slack'
+    secrets: inherit
