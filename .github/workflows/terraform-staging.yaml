@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
       - staging
-  workflow_dispatch:
 
 env:
   TF_CLOUD_ORGANIZATION: "deploymenttheory"
