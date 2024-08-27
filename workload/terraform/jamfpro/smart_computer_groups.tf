@@ -31,34 +31,34 @@ resource "jamfpro_smart_computer_group" "smart_computer_group_002" {
   criteria {
     name          = "FileVault 2 Status"
     priority      = 0
-    and_or        = "or"
+    and_or        = "and"
     search_type   = "is"
-    value         = "not Encrypted"
+    value         = "not encrypted"
     opening_paren = true
-    closing_paren = false
+    closing_paren = true
   }
   criteria {
-    name          = "Gatekeeper Status"
+    name          = "Gatekeeper"
     priority      = 1
     and_or        = "or"
     search_type   = "is"
-    value         = "not Enabled"
-    opening_paren = false
-    closing_paren = false
+    value         = "not enabled"
+    opening_paren = true
+    closing_paren = true
   }
   criteria {
-    name          = "SIP Status"
+    name          = "System Integrity Protection"
     priority      = 2
     and_or        = "or"
     search_type   = "is"
-    value         = "not Enabled"
-    opening_paren = false
+    value         = "not enabled"
+    opening_paren = true
     closing_paren = true
   }
 }
 
 resource "jamfpro_smart_computer_group" "smart_computer_group_003" {
-  name = "tf-ghatest-non_compliant_macs"
+  name = "tf-ghatest-has_microsoft_word_less_than_16.50"
 
   site_id = -1
   criteria {
