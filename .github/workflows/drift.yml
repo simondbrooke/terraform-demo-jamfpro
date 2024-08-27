@@ -62,17 +62,36 @@ jobs:
       - name: Apply Changes to Correct Drift
         if: steps.check-drift.outputs.drift_detected == 'true'
         uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.3.1
+        id: apply-drift
         with:
           run: ${{ fromJSON(steps.drift-plan.outputs.payload).data.id }}
           comment: "Automated drift correction for ${{ matrix.environment }} environment"
 
-      - name: Send Notification
-        if: steps.check-drift.outputs.drift_detected == 'true'
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          text: "Drift detected and corrected in ${{ matrix.environment }} environment"
-          fields: repo,message,commit,author,action,eventName,ref,workflow
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+      - name: Determine Result Message
+        id: result-message
+        run: |
+          if [ "${{ steps.check-drift.outputs.drift_detected }}" == "true" ]; then
+            if [ "${{ steps.apply-drift.outcome }}" == "success" ]; then
+              echo "message=Drift detected and corrected" >> $GITHUB_OUTPUT
+            else
+              echo "message=Drift detected but not corrected" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "message=No drift detected" >> $GITHUB_OUTPUT
+          fi
+
+    outputs:
+      result_message: ${{ steps.result-message.outputs.message }}
+
+  send-notification:
+    needs: detect-and-correct-drift
+    if: always()
+    strategy:
+      matrix:
+        environment: [sandbox, staging, production]
+    uses: ./.github/workflows/send-notification.yml
+    with:
+      environment: "${{ matrix.environment }}"
+      result: "${{ needs.detect-and-correct-drift.outputs.result_message }}"
+      notification_channel: msteams  # or 'slack'
+    secrets: inherit
