@@ -14,6 +14,10 @@ env:
   PIPELINE_DEBUG: "true"
   # other env vars are set within tfcloud directly for within the tf workspace
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   terraform-plan:
     if: github.repository != 'hashicorp-education/learn-terraform-github-actions'
@@ -30,9 +34,9 @@ jobs:
         if: env.PIPELINE_DEBUG == 'true'
         run: |
           echo "auth_method=${{ env.jamfpro_auth_method }}"
-          echo "client_id=${{ env.jamfpro_client_id }}"
-          echo "client_secret=${{ env.jamfpro_client_secret }}"
-          echo "instance_fqdn=${{ env.jamfpro_instance_fqdn }}"
+          echo "client_id=${{ secrets.production_jamfpro_client_id }}"
+          echo "client_secret=${{ secrets.production_jamfpro_client_secret }}"
+          echo "instance_fqdn=${{ secrets.production_jamfpro_instance_fqdn }}"
           echo "load_balancer_lock=${{ env.jamfpro_jamf_load_balancer_lock }}"
           echo "log_level=${{ env.jamfpro_log_level }}"
           echo "log_output_format=${{ env.jamfpro_log_output_format }}"
@@ -60,6 +64,13 @@ jobs:
         id: plan-output
         with:
           plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
+      
+      - name: Reference Plan Output
+        run: |
+          echo "Plan status: ${{ steps.plan-output.outputs.plan_status }}"
+          echo "Resources to Add: ${{ steps.plan-output.outputs.add }}"
+          echo "Resources to Change: ${{ steps.plan-output.outputs.change }}"
+          echo "Resources to Destroy: ${{ steps.plan-output.outputs.destroy }}"
 
       - name: Update PR
         uses: actions/github-script@v7.0.1
