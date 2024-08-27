@@ -1,10 +1,9 @@
-// set terraform cloud organization and workspace
+// set terraform cloud organization and workspaceterraform {
 terraform {
   cloud {
     organization = "deploymenttheory"
-
     workspaces {
-      name = "terraform-jamfpro-demo"
+      tags = ["Jamf Pro"]
     }
   }
 }
