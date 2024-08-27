@@ -3,8 +3,15 @@ name: "Promote to Sandbox"
 on:
   push:
     branches:
-      - release
+      - 'feature-*'
+      - 'bugfix-*'
+      - 'release-*'
   workflow_dispatch:
+    inputs:
+      branch_name:
+        description: 'Branch to promote to Sandbox (must start with feature-, bugfix-, or release-)'
+        required: true
+        default: 'release-'
 
 env:
   TF_CLOUD_ORGANIZATION: "deploymenttheory"
@@ -14,20 +21,33 @@ env:
   PIPELINE_DEBUG: "true"
   # other env vars are set within tfcloud directly for within the tf workspace
 
-permissions:
-  contents: read
-  id-token: write
-
 jobs:
   terraform-apply:
-    if: github.repository != 'hashicorp-education/learn-terraform-github-actions'
+    if: >
+      github.repository != 'hashicorp-education/learn-terraform-github-actions' &&
+      (
+        github.event_name == 'workflow_dispatch' ||
+        startsWith(github.ref, 'refs/heads/feature-') ||
+        startsWith(github.ref, 'refs/heads/bugfix-') ||
+        startsWith(github.ref, 'refs/heads/release-')
+      )
     name: "Terraform Apply to Sandbox"
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.7
+      
+      - name: Validate Branch Name
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          branch="${{ github.event.inputs.branch_name }}"
+          if [[ ! "$branch" =~ ^(feature|bugfix|release)- ]]; then
+            echo "Error: Branch name must start with 'feature-', 'bugfix-', or 'release-'"
+            exit 1
+          fi
       
       - name: Print Terraform Variables
         if: env.PIPELINE_DEBUG == 'true'
