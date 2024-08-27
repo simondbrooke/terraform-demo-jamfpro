@@ -1,4 +1,4 @@
-name: "Terraform Release to Sandbox"
+name: "Promote to Sandbox"
 
 on:
   push:
@@ -17,7 +17,7 @@ env:
 permissions:
   contents: read
   id-token: write
-  
+
 jobs:
   terraform-apply:
     if: github.repository != 'hashicorp-education/learn-terraform-github-actions'
