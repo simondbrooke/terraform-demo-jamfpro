@@ -74,7 +74,7 @@ resource "jamfpro_smart_computer_group" "smart_computer_group_003" {
     name          = "Application Version"
     priority      = 1
     and_or        = "and"
-    search_type   = "is less than"
+    search_type   = "less than"
     value         = " 16.50"
     opening_paren = false
     closing_paren = true
