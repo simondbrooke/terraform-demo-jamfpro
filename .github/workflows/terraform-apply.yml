@@ -1,9 +1,9 @@
-name: "Terraform Apply With TFC"
+name: "Terraform Apply With TFC - Sandbox"
 
 on:
   push:
     branches:
-      - main
+      - sandbox
 
 env:
   TF_CLOUD_ORGANIZATION: "deploymenttheory" # Replace with your Terraform Cloud organization name
