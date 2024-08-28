@@ -1,19 +1,11 @@
-
 name: "Promote to Staging"
-# workflow will:
-# Run the terraform-plan job when a PR is opened or updated.
-# Run the terraform-apply job only when a PR is merged into the staging branch.
+
 on:
   pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-    branches:
-      - staging
-  pull_request_review:
-    types:
-      - submitted
+    types: [opened, synchronize, reopened]
+    branches: [staging]
+  push:
+    branches: [staging]
 
 env:
   TF_CLOUD_ORGANIZATION: "deploymenttheory"
@@ -31,18 +23,18 @@ permissions:
 jobs:
   check-pr-origin:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
     - name: Check PR Origin
-      if: github.base_ref == 'staging'
       run: |
         if [ "${{ github.head_ref }}" != "sandbox" ]; then
           echo "PRs to staging can only come from the sandbox branch. This PR originates from ${{ github.head_ref }}."
           exit 1
         fi
-        
+
   terraform-plan:
     needs: [check-pr-origin]
-    if: github.repository != 'hashicorp-education/learn-terraform-github-actions'
+    if: github.event_name == 'pull_request' && github.repository != 'hashicorp-education/learn-terraform-github-actions'
     name: "Terraform Plan for Staging"
     runs-on: ubuntu-latest
     steps:
@@ -70,7 +62,7 @@ jobs:
         id: plan-output
         with:
           plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
-      
+
       - name: Reference Plan Output
         run: |
           echo "Plan status: ${{ steps.plan-output.outputs.plan_status }}"
@@ -116,7 +108,7 @@ jobs:
 
   terraform-apply:
     name: "Terraform Apply to Staging"
-    if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && github.event.pull_request.base.ref == 'staging'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -143,13 +135,13 @@ jobs:
         with:
           run: ${{ steps.apply-run.outputs.run_id }}
           comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
-  
+
   send-notification:
     needs: [terraform-plan, terraform-apply]
     if: always()
     uses: ./.github/workflows/send-notification.yml
     with:
       environment: "Staging"
-      result: ${{ (needs.terraform-plan.result == 'success' && needs.terraform-apply.result == 'success') && 'success' || 'failure' }}
+      result: ${{ (needs.terraform-plan.result == 'success' || needs.terraform-apply.result == 'success') && 'success' || 'failure' }}
       notification_channel: msteams  # or 'slack'
     secrets: inherit
