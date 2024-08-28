@@ -36,6 +36,7 @@ jobs:
         fi
 
   terraform-plan:
+    needs: [check-pr-origin]
     if: github.repository != 'hashicorp-education/learn-terraform-github-actions'
     name: "Terraform Plan for Production"
     runs-on: ubuntu-latest
