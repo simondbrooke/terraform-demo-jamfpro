@@ -41,7 +41,7 @@ jobs:
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
       - name: Create and push new tag
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/production'
         run: |
           git tag $NEW_VERSION
           git push origin $NEW_VERSION
