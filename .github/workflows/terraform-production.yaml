@@ -1,7 +1,12 @@
 name: "Promote to Production"
 
+# workflow will:
+# Run the terraform-plan job when a PR is opened or updated.
+# Run the terraform-apply job only when a PR is merged into the production branch.
 on:
   pull_request:
+    types:
+      - closed
     branches:
       - production
 
