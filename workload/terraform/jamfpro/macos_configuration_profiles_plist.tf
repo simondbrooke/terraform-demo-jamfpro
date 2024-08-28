@@ -6,6 +6,7 @@ resource "jamfpro_macos_configuration_profile_plist" "jamfpro_macos_configuratio
   category_id         = jamfpro_category.jamfpro_category_001.id
   user_removable      = false
   level               = "System"
+  redeploy_on_update  = "Newly Assigned"
   scope {
     all_computers = true
     all_jss_users = true
@@ -19,6 +20,7 @@ resource "jamfpro_macos_configuration_profile_plist" "jamfpro_macos_configuratio
   category_id         = jamfpro_category.jamfpro_category_001.id
   user_removable      = false
   level               = "System"
+  redeploy_on_update  = "Newly Assigned"
   scope {
     all_computers = true
     all_jss_users = true
@@ -32,6 +34,7 @@ resource "jamfpro_macos_configuration_profile_plist" "jamfpro_macos_configuratio
   category_id         = jamfpro_category.jamfpro_category_001.id
   user_removable      = false
   level               = "System"
+  redeploy_on_update  = "Newly Assigned"
   scope {
     all_computers = true
     all_jss_users = true
@@ -45,6 +48,7 @@ resource "jamfpro_macos_configuration_profile_plist" "jamfpro_macos_configuratio
   category_id         = jamfpro_category.jamfpro_category_001.id
   user_removable      = false
   level               = "System"
+  redeploy_on_update  = "Newly Assigned"
   scope {
     all_computers = true
     all_jss_users = true
