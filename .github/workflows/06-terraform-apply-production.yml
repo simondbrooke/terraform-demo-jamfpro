@@ -1,7 +1,8 @@
 name: "06 - terraform apply: production"
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches: [production]
 
 env:
