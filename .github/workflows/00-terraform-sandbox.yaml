@@ -54,12 +54,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.7
         
-      - name: Validate Branch Name
+      - name: Validate Branch Name for manual runs
         if: github.event_name == 'workflow_dispatch'
         run: |
           branch="${{ github.event.inputs.branch_name }}"
-          if [[ ! "$branch" =~ ^(feature|bugfix|release)- ]]; then
-            echo "Error: Branch name must start with 'feature-', 'bugfix-', or 'release-'"
+          if [[ ! "$branch" =~ ^(feature|bugfix|release|hotfix|chore|spike|config|docs|test)- ]]; then
+            echo "Error: Branch name must start with 'feature-', 'bugfix-', 'release-', 'hotfix-', 'chore-', 'spike-', 'config-', 'docs-', or 'test-'"
             exit 1
           fi
 
