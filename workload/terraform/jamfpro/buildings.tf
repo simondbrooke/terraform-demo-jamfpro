@@ -9,18 +9,6 @@
 #   country         = "The United States of America"
 # }
 
-# data "jamfpro_building" "jamfpro_building_001_data" {
-#   id = jamfpro_building.jamfpro_building_001.id
-# }
-
-# output "jamfpro_building_001_data_id" {
-#   value = data.jamfpro_building.jamfpro_building_001_data.id
-# }
-
-# output "jamfpro_building_001_data_name" {
-#   value = data.jamfpro_building.jamfpro_building_001_data.name
-# }
-
 # resource "jamfpro_building" "jamfpro_building_002" {
 #   name            = "Jamf Headquarters"
 #   street_address1 = "100 Washington Ave S"
@@ -30,16 +18,3 @@
 #   zip_postal_code = "55401"
 #   country         = "The United States of America"
 # }
-
-# data "jamfpro_building" "jamfpro_building_002_data" {
-#   id = jamfpro_building.jamfpro_building_002.id
-# }
-
-# output "jamfpro_building_002_data_id" {
-#   value = data.jamfpro_building.jamfpro_building_002_data.id
-# }
-
-# output "jamfpro_building_002_data_name" {
-#   value = data.jamfpro_building.jamfpro_building_002_data.name
-# }
-
