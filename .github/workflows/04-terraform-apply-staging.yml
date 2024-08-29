@@ -1,7 +1,8 @@
 name: "04 - terraform apply: staging"
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches: [staging]
 
 env:
