@@ -1,19 +1,14 @@
 name: "Promote to Production"
-
 # workflow will:
-# Run the terraform-plan job when a PR is opened or updated.
-# Run the terraform-apply job only when a PR is merged into the production branch.
+# tf plan is executed when a pull request is made to the staging branch, allowing for review of the proposed changes before they are applied.
+# tf apply is executed when changes are actually pushed (merged) into the staging branch, implementing the approved changes.
 on:
   pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-    branches:
-      - production
-  pull_request_review:
-    types:
-      - submitted
+    types: [opened, synchronize, reopened]
+    branches: [staging]
+  push:
+    branches: [staging]
+
 env:
   TF_CLOUD_ORGANIZATION: "deploymenttheory"
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
@@ -41,7 +36,7 @@ jobs:
 
   terraform-plan:
     needs: [check-pr-origin]
-    if: github.repository != 'hashicorp-education/learn-terraform-github-actions'
+    if: github.event_name == 'pull_request' && github.repository != 'hashicorp-education/learn-terraform-github-actions'
     name: "Terraform Plan for Production"
     runs-on: ubuntu-latest
     steps:
@@ -115,7 +110,7 @@ jobs:
 
   terraform-apply:
     name: "Terraform Apply to Production"
-    if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && github.event.pull_request.base.ref == 'production'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
