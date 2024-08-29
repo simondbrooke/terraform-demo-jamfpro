@@ -1,4 +1,4 @@
-name: "Promote to Sandbox"
+name: "00 - terraform plan + apply: sandbox"
 
 on:
   push:
