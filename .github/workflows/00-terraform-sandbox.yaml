@@ -1,4 +1,4 @@
-name: "00 - terraform plan + apply: sandbox"
+name: "00 - terraform solution proving: sandbox"
 
 on:
   push:

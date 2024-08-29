@@ -1,13 +1,13 @@
-name: "02 - terraform apply: staging"
+name: "02 - terraform apply: sandbox"
 
 on:
   push:
-    branches: [staging]
+    branches: [sandbox]
 
 env:
   TF_CLOUD_ORGANIZATION: "deploymenttheory"
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
-  TF_WORKSPACE: "terraform-jamfpro-staging"
+  TF_WORKSPACE: "terraform-jamfpro-sandbox"
   CONFIG_DIRECTORY: "workload/terraform/jamfpro"
   PIPELINE_DEBUG: "true"
 
@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   terraform-apply:
-    name: "Terraform Apply to Staging"
+    name: "Terraform Apply to Sandbox"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
