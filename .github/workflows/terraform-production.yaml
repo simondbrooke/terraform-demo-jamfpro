@@ -1,13 +1,13 @@
 name: "Promote to Production"
 # workflow will:
-# tf plan is executed when a pull request is made to the staging branch, allowing for review of the proposed changes before they are applied.
-# tf apply is executed when changes are actually pushed (merged) into the staging branch, implementing the approved changes.
+# tf plan is executed when a pull request is made to the production branch, allowing for review of the proposed changes before they are applied.
+# tf apply is executed when changes are actually pushed (merged) into the production branch, implementing the approved changes.
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    branches: [staging]
+    branches: [production]
   push:
-    branches: [staging]
+    branches: [production]
 
 env:
   TF_CLOUD_ORGANIZATION: "deploymenttheory"
