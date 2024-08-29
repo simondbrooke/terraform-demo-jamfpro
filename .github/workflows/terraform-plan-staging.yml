@@ -1,21 +1,16 @@
-name: "Promote to Production"
-# workflow will:
-# tf plan is executed when a pull request is made to the production branch, allowing for review of the proposed changes before they are applied.
-# tf apply is executed when changes are actually pushed (merged) into the production branch, implementing the approved changes.
+name: "Terraform Plan for Staging"
+
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    branches: [production]
-  push:
-    branches: [production]
+    branches: [staging]
 
 env:
   TF_CLOUD_ORGANIZATION: "deploymenttheory"
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
-  TF_WORKSPACE: "terraform-jamfpro-production"
+  TF_WORKSPACE: "terraform-jamfpro-staging"
   CONFIG_DIRECTORY: "workload/terraform/jamfpro"
   PIPELINE_DEBUG: "true"
-  # other env vars are set within tfcloud directly for within the tf workspace
 
 permissions:
   contents: read
@@ -27,17 +22,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check PR Origin
-      if: github.base_ref == 'production'
       run: |
-        if [ "${{ github.head_ref }}" != "staging" ]; then
-          echo "PRs to production can only come from the staging branch. This PR originates from ${{ github.head_ref }}."
+        if [ "${{ github.head_ref }}" != "sandbox" ]; then
+          echo "PRs to staging can only come from the sandbox branch. This PR originates from ${{ github.head_ref }}."
           exit 1
         fi
 
   terraform-plan:
     needs: [check-pr-origin]
-    if: github.event_name == 'pull_request' && github.repository != 'hashicorp-education/learn-terraform-github-actions'
-    name: "Terraform Plan for Production"
+    name: "Terraform Plan for Staging"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -64,13 +57,6 @@ jobs:
         id: plan-output
         with:
           plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
-      
-      - name: Reference Plan Output
-        run: |
-          echo "Plan status: ${{ steps.plan-output.outputs.plan_status }}"
-          echo "Resources to Add: ${{ steps.plan-output.outputs.add }}"
-          echo "Resources to Change: ${{ steps.plan-output.outputs.change }}"
-          echo "Resources to Destroy: ${{ steps.plan-output.outputs.destroy }}"
 
       - name: Update PR
         uses: actions/github-script@v7.0.1
@@ -78,7 +64,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            // 1. Retrieve existing bot comments for the PR
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -87,13 +72,12 @@ jobs:
             const botComment = comments.find(comment => {
               return comment.user.type === 'Bot' && comment.body.includes('Terraform Cloud Plan Output')
             });
-            const output = `#### Terraform Cloud Plan Output for Production
+            const output = `#### Terraform Cloud Plan Output for Staging
               \`\`\`
               Plan: ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy.
               \`\`\`
               [Terraform Cloud Plan](${{ steps.plan-run.outputs.run_link }})
               `;
-            // 3. Delete previous comment so PR timeline makes sense
             if (botComment) {
               github.rest.issues.deleteComment({
                 owner: context.repo.owner,
@@ -108,43 +92,12 @@ jobs:
               body: output
             });
 
-  terraform-apply:
-    name: "Terraform Apply to Production"
-    needs: [terraform-plan]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4.1.7
-
-      - name: Upload Configuration
-        uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.1
-        id: apply-upload
-        with:
-          workspace: ${{ env.TF_WORKSPACE }}
-          directory: ${{ env.CONFIG_DIRECTORY }}
-
-      - name: Create Apply Run
-        uses: hashicorp/tfc-workflows-github/actions/create-run@v1.3.1
-        id: apply-run
-        with:
-          workspace: ${{ env.TF_WORKSPACE }}
-          configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
-
-      - name: Apply
-        uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.3.1
-        if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
-        id: apply
-        with:
-          run: ${{ steps.apply-run.outputs.run_id }}
-          comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
-  
   send-notification:
-    needs: [terraform-plan, terraform-apply]
+    needs: [terraform-plan]
     if: always()
     uses: ./.github/workflows/send-notification.yml
     with:
-      environment: "Production"
-      result: ${{ (needs.terraform-plan.result == 'success' && needs.terraform-apply.result == 'success') && 'success' || 'failure' }}
-      notification_channel: msteams  # or 'slack'
+      environment: "Staging"
+      result: ${{ needs.terraform-plan.result == 'success' && 'success' || 'failure' }}
+      notification_channel: msteams
     secrets: inherit
