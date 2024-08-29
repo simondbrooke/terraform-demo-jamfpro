@@ -50,7 +50,7 @@ jobs:
     if: always()
     uses: ./.github/workflows/send-notification.yml
     with:
-      environment: "Staging"
+      environment: "sandbox"
       result: ${{ needs.terraform-apply.result == 'success' && 'success' || 'failure' }}
       notification_channel: msteams
     secrets: inherit
