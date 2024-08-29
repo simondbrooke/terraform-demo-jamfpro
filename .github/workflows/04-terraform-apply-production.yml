@@ -1,4 +1,4 @@
-name: "Production Terraform Apply"
+name: "04 - terraform apply: production"
 
 on:
   push:

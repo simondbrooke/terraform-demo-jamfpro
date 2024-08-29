@@ -1,14 +1,14 @@
-name: "Production Terraform Plan"
+name: "01 - terraform plan: staging"
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    branches: [production]
+    branches: [staging]
 
 env:
   TF_CLOUD_ORGANIZATION: "deploymenttheory"
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
-  TF_WORKSPACE: "terraform-jamfpro-production"
+  TF_WORKSPACE: "terraform-jamfpro-staging"
   CONFIG_DIRECTORY: "workload/terraform/jamfpro"
   PIPELINE_DEBUG: "true"
 
@@ -22,17 +22,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check PR Origin
-      if: github.base_ref == 'production'
       run: |
-        if [ "${{ github.head_ref }}" != "staging" ]; then
-          echo "PRs to production can only come from the staging branch. This PR originates from ${{ github.head_ref }}."
+        if [ "${{ github.head_ref }}" != "sandbox" ]; then
+          echo "PRs to staging can only come from the sandbox branch. This PR originates from ${{ github.head_ref }}."
           exit 1
         fi
 
   terraform-plan:
     needs: [check-pr-origin]
-    if: github.repository != 'hashicorp-education/learn-terraform-github-actions'
-    name: "Terraform Plan for Production"
+    name: "Terraform Plan for Staging"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -60,20 +58,12 @@ jobs:
         with:
           plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
 
-      - name: Reference Plan Output
-        run: |
-          echo "Plan status: ${{ steps.plan-output.outputs.plan_status }}"
-          echo "Resources to Add: ${{ steps.plan-output.outputs.add }}"
-          echo "Resources to Change: ${{ steps.plan-output.outputs.change }}"
-          echo "Resources to Destroy: ${{ steps.plan-output.outputs.destroy }}"
-
       - name: Update PR
         uses: actions/github-script@v7.0.1
         id: plan-comment
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            // 1. Retrieve existing bot comments for the PR
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -82,13 +72,12 @@ jobs:
             const botComment = comments.find(comment => {
               return comment.user.type === 'Bot' && comment.body.includes('Terraform Cloud Plan Output')
             });
-            const output = `#### Terraform Cloud Plan Output for Production
+            const output = `#### Terraform Cloud Plan Output for Staging
               \`\`\`
               Plan: ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy.
               \`\`\`
               [Terraform Cloud Plan](${{ steps.plan-run.outputs.run_link }})
               `;
-            // 3. Delete previous comment so PR timeline makes sense
             if (botComment) {
               github.rest.issues.deleteComment({
                 owner: context.repo.owner,
@@ -108,7 +97,7 @@ jobs:
     if: always()
     uses: ./.github/workflows/send-notification.yml
     with:
-      environment: "Production Plan"
+      environment: "Staging"
       result: ${{ needs.terraform-plan.result == 'success' && 'success' || 'failure' }}
-      notification_channel: msteams  # or 'slack'
+      notification_channel: msteams
     secrets: inherit
