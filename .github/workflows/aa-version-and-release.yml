@@ -163,13 +163,14 @@ jobs:
         with:
           plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
 
-      - name: Create Terraform Plan PR
+      - name: Create or Update PR with Terraform Plan
         id: create_plan_pr
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Add Terraform plan for release ${{ needs.create-version.outputs.new_version }}"
           branch: tf-plan-${{ needs.create-version.outputs.new_version }}
-          base: staging
+          base: ${{ needs.release-to-staging.outputs.release_pr_number != '' && 'release-${{ needs.create-version.outputs.new_version }}' || 'staging' }}
           title: "Terraform Plan for Release ${{ needs.create-version.outputs.new_version }}"
           body: |
             ## Terraform Cloud Plan Output for Staging
@@ -187,32 +188,15 @@ jobs:
             ```
             
             [View Full Terraform Cloud Plan](${{ steps.plan-run.outputs.run_link }})
-            
-            ---
-            
-            Please review this plan carefully. If it looks good, approve this PR to apply these changes to the staging environment.
+          delete-branch: true
 
-  # cleanup:
-  #   needs: [create-version, release-to-staging, terraform-plan-staging]
-  #   runs-on: ubuntu-latest
-  #   if: success()
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4.1.7
+      - name: Check outputs
+        if: steps.create_plan_pr.outputs.pull-request-number
+        run: |
+          echo "Terraform Plan PR Number - ${{ steps.create_plan_pr.outputs.pull-request-number }}"
+          echo "Terraform Plan PR URL - ${{ steps.create_plan_pr.outputs.pull-request-url }}"
 
-  #     - name: Delete release branch
-  #       run: |
-  #         git push origin --delete release-${{ needs.create-version.outputs.new_version }}
-
-  send-notification:
-    needs: [create-version, release-to-staging, terraform-plan-staging]
-    if: always()
-    uses: ./.github/workflows/send-notification.yml
-    with:
-      environment: "Staging"
-      result: ${{ needs.terraform-plan-staging.result == 'success' && 'success' || 'failure' }}
-      notification_channel: msteams
-      new_version: ${{ needs.create-version.outputs.new_version }}
-      release_pr_number: ${{ needs.release-to-staging.outputs.release_pr_number }}
-      plan_pr_number: ${{ needs.terraform-plan-staging.outputs.plan_pr_number }}
-    secrets: inherit
+      - name: No Terraform Plan PR created
+        if: steps.create_plan_pr.outputs.pull-request-number == ''
+        run: |
+          echo "No Terraform Plan pull request was created. This might be because there are no changes in the Terraform configuration."
