@@ -272,11 +272,11 @@ def main():
     print(f"New version determined: {new_version}")
     
     # Update to use GITHUB_OUTPUT environment file
-    with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+    with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as f:
         f.write(f"new_version={new_version}\n")
     
     # Set environment variable
-    with open(os.environ['GITHUB_ENV'], 'a') as f:
+    with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as f:
         f.write(f"NEW_VERSION={new_version}\n")
 
 if __name__ == "__main__":
