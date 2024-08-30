@@ -130,7 +130,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.7
         with:
-          ref: release-${{ needs.create-version.outputs.new_version }}
+          fetch-depth: 0
+
+      - name: Setup for Terraform plan
+        run: |
+          if [[ "${{ needs.release-to-staging.outputs.release_pr_number }}" != "" ]]; then
+            echo "A release PR was created. Checking out the release branch."
+            git checkout release-${{ needs.create-version.outputs.new_version }}
+          else
+            echo "No release PR was created. Using the current HEAD."
+          fi
 
       - name: Upload Configuration
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.1

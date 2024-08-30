@@ -47,10 +47,9 @@ jobs:
           github-token: ${{ github.token }}
           ms-teams-webhook-uri: ${{ secrets.MSTEAMS_WEBHOOK_URL }}
           notification-summary: |
-            Deployment to ${{ inputs.environment }} ${{ inputs.result }}<br>
-            New Version: ${{ inputs.new_version }}<br>
-            Release PR: <a href="https://github.com/${{ github.repository }}/pull/${{ inputs.release_pr_number }}">PR #${{ inputs.release_pr_number }}</a><br>
+            Deployment to ${{ inputs.environment }} ${{ inputs.result }} | New Version: ${{ inputs.new_version }}<br>
             Terraform Plan PR: <a href="https://github.com/${{ github.repository }}/pull/${{ inputs.plan_pr_number }}">PR #${{ inputs.plan_pr_number }}</a>
+            Release PR: <a href="https://github.com/${{ github.repository }}/pull/${{ inputs.release_pr_number }}">PR #${{ inputs.release_pr_number }}</a>
           notification-color: ${{ inputs.result == 'success' && '28a745' || 'dc3545' }}
           timezone: "UTC"
           verbose-logging: true
