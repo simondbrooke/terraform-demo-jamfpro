@@ -177,6 +177,15 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const additions = parseInt(`${{ steps.plan-output.outputs.add }}`, 10);
+            const changes = parseInt(`${{ steps.plan-output.outputs.change }}`, 10);
+            const destructions = parseInt(`${{ steps.plan-output.outputs.destroy }}`, 10);
+
+            if (additions === 0 && changes === 0 && destructions === 0) {
+              console.log('No changes detected in the Terraform plan. Skipping PR creation.');
+              return; // Exit the script without creating a PR
+            }
+
             const planSummary = `
             ## Terraform Cloud Plan Output for ${{ github.event.inputs.target_environment }}
 
