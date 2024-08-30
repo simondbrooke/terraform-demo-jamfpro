@@ -70,9 +70,10 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - name: Checkout
+      - name: Checkout staging branch
         uses: actions/checkout@v4.1.7
         with:
+          ref: staging
           fetch-depth: 0
 
       - name: Upload Configuration
