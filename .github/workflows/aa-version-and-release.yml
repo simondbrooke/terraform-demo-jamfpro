@@ -13,30 +13,28 @@ jobs:
   create-version-and-release:
     runs-on: ubuntu-latest
     outputs:
-      new_version: ${{ steps.set_version.outputs.new_version }}
+      new_version: ${{ steps.determine_version.outputs.new_version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.1.7
         with:
           fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
-      - name: Generate hash from Terraform configurations
+      - name: Determine version and generate hash
+        id: determine_version
         run: |
-          CONFIG_HASH=$(find ${{ env.CONFIG_DIRECTORY }} -type f -name '*.tf' -exec sha256sum {} + | sha256sum | cut -c1-8)
-          echo "CONFIG_HASH=$CONFIG_HASH" >> $GITHUB_ENV
+          python workload/scripts/version_determinator.py
+        env:
+          CONFIG_DIRECTORY: ${{ env.CONFIG_DIRECTORY }}
 
-      - name: Create new version
-        id: set_version
+      - name: Display new release version
         run: |
-          LATEST_TAG=$(git describe --tags --abbrev=0 --match "v*" 2>/dev/null || echo "v0.0.0")
-          VERSION=$(echo $LATEST_TAG | sed 's/v//' | cut -d'-' -f1)
-          IFS='.' read -ra VERSION_PARTS <<< "$VERSION"
-          MAJOR=${VERSION_PARTS[0]}
-          MINOR=${VERSION_PARTS[1]}
-          PATCH=$((VERSION_PARTS[2]+1))
-          NEW_VERSION="v$MAJOR.$MINOR.$PATCH-$CONFIG_HASH"
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          echo "New version: ${{ env.NEW_VERSION }}"
 
       - name: Create and push new tag
         run: |
