@@ -45,12 +45,14 @@ jobs:
         with:
           run: ${{ steps.apply-run.outputs.run_id }}
           comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
-          
-      - name: Cleanup Temporary Branch
-        if: success() && steps.apply.conclusion == 'success'
-        uses: ./.github/workflows/cleanup-branch.yml
-        with:
-          branch: tf-plan-${{ needs.create-version-and-release.outputs.new_version }}
+
+  cleanup:
+    needs: [terraform-apply]
+    name: Cleanup Temporary Branch
+    if: needs.terraform-apply.result == 'success'
+    uses: ./.github/workflows/cleanup-branch.yml
+    with:
+      branch: release-${{ needs.terraform-apply.outputs.new_version }}
 
   send-notification:
     needs: [terraform-apply]
