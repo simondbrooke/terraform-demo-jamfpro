@@ -52,7 +52,7 @@ jobs:
     if: needs.terraform-apply.result == 'success'
     uses: ./.github/workflows/cleanup-branch.yml
     with:
-      branch: tf-plan-${{ needs.create-version-and-release.outputs.new_version }}
+      branch: release-${{ needs.terraform-apply.outputs.new_version }}
 
   send-notification:
     needs: [terraform-apply]
