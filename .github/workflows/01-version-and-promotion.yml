@@ -137,20 +137,71 @@ jobs:
         with:
           plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
 
-      - name: Update PR
+      - name: Find Pull Request
+        id: find_pr
         uses: actions/github-script@v7.0.1
-        id: plan-comment
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const output = `#### Terraform Cloud Plan Output for Staging
-              \`\`\`
-              Plan: ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy.
-              \`\`\`
-              [Terraform Cloud Plan](${{ steps.plan-run.outputs.run_link }})
-              `;
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: 'promote-${{ needs.create-version.outputs.new_version }}',
+              base: 'staging'
+            });
+            if (prs.data.length === 0) {
+              core.setFailed('No matching pull request found');
+              return;
+            }
+            return prs.data[0].number;
+
+      - name: Update PR
+        if: steps.find_pr.outputs.pr_number
+        uses: actions/github-script@v7.0.1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = ${{ steps.find_pr.outputs.pr_number }};
+            const planStatus = '${{ steps.plan-output.outputs.plan_status }}';
+            const planDetails = `
+              Additions: ${{ steps.plan-output.outputs.add }}
+              Changes: ${{ steps.plan-output.outputs.change }}
+              Destructions: ${{ steps.plan-output.outputs.destroy }}
+            `;
+            
+            let statusEmoji;
+            switch(planStatus) {
+              case 'planned':
+                statusEmoji = '✅';
+                break;
+              case 'errored':
+                statusEmoji = '❌';
+                break;
+              default:
+                statusEmoji = '⚠️';
+            }
+            
+            const output = `## Terraform Cloud Plan Output for Staging ${statusEmoji}
+            
+            ### Plan Status: ${planStatus}
+            
+            ### Plan Details:
+            ${planDetails}
+            
+            ### Summary:
+            \`\`\`
+            Plan: ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy.
+            \`\`\`
+            
+            [View Full Terraform Cloud Plan](${{ steps.plan-run.outputs.run_link }})
+            
+            ---
+            
+            Please review this plan carefully. If it looks good, approve the pull request to apply these changes to the staging environment.`;
+            
+            await github.rest.issues.createComment({
+              issue_number: prNumber,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: output
