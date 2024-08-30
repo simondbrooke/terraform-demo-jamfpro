@@ -10,7 +10,6 @@ env:
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
   TF_WORKSPACE: "terraform-jamfpro-production"
   CONFIG_DIRECTORY: "workload/terraform/jamfpro"
-  PIPELINE_DEBUG: "true"
 
 jobs:
   create-version:
