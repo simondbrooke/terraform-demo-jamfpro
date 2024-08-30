@@ -1,4 +1,4 @@
-name: "01 - Sandbox Versioning and Promotion"
+name: "01 - sandbox versioning and promotion"
 
 on:
   schedule:
