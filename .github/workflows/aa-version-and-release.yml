@@ -169,25 +169,25 @@ jobs:
             
             Please review this plan carefully. If it looks good, approve this PR to apply these changes to the staging environment.
 
-  cleanup:
-    needs: [create-version, release-to-staging, terraform-plan-staging]
-    runs-on: ubuntu-latest
-    if: success()
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4.1.7
+  # cleanup:
+  #   needs: [create-version, release-to-staging, terraform-plan-staging]
+  #   runs-on: ubuntu-latest
+  #   if: success()
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4.1.7
 
-      - name: Delete release branch
-        run: |
-          git push origin --delete release-${{ needs.create-version.outputs.new_version }}
+  #     - name: Delete release branch
+  #       run: |
+  #         git push origin --delete release-${{ needs.create-version.outputs.new_version }}
 
   send-notification:
-    needs: [create-version, release-to-staging, terraform-plan-staging, cleanup]
+    needs: [create-version, release-to-staging, terraform-plan-staging]
     if: always()
     uses: ./.github/workflows/send-notification.yml
     with:
       environment: "Staging"
-      result: ${{ needs.cleanup.result == 'success' && 'success' || 'failure' }}
+      result: ${{ needs.terraform-plan-staging.result == 'success' && 'success' || 'failure' }}
       notification_channel: msteams
       new_version: ${{ needs.create-version.outputs.new_version }}
       release_pr_number: ${{ needs.release-to-staging.outputs.release_pr_number }}
