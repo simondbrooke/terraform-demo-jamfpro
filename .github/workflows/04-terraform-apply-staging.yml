@@ -50,9 +50,20 @@ jobs:
     needs: [terraform-apply]
     name: Cleanup Temporary Branch
     if: needs.terraform-apply.result == 'success'
-    uses: ./.github/workflows/cleanup-branch.yml
-    with:
-      branch: release-${{ needs.terraform-apply.outputs.new_version }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Latest Release Version
+        id: get_version
+        run: |
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r .tag_name)
+          echo "LATEST_RELEASE=${LATEST_RELEASE}" >> $GITHUB_ENV
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4.1.7
+
+      - name: Delete Temporary Branch
+        run: |
+          git push origin --delete release-${{ env.LATEST_RELEASE }}
 
   send-notification:
     needs: [terraform-apply]
