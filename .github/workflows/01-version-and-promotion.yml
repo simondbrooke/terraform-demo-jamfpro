@@ -137,24 +137,40 @@ jobs:
         with:
           plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
 
-      - name: Find Pull Request
-        id: find_pr
+      - name: Find or Create Pull Request
+        id: find_or_create_pr
         uses: actions/github-script@v7.0.1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const branchName = 'promote-${{ needs.create-version.outputs.new_version }}';
+            
+            // Try to find existing PR
             const prs = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
-              head: 'promote-${{ needs.create-version.outputs.new_version }}',
+              head: branchName,
               base: 'staging'
             });
-            if (prs.data.length === 0) {
-              core.setFailed('No matching pull request found');
-              return;
+            
+            if (prs.data.length > 0) {
+              console.log('Existing PR found');
+              return prs.data[0].number;
             }
-            return prs.data[0].number;
+            
+            // If no PR exists, create one
+            console.log('No existing PR found. Creating a new one.');
+            const newPr = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Promote ${{ needs.create-version.outputs.new_version }} to Staging`,
+              head: branchName,
+              base: 'staging',
+              body: 'This PR was automatically created by the CI/CD pipeline to promote the latest changes to staging.'
+            });
+            
+            return newPr.data.number;
 
       - name: Update PR
         if: steps.find_pr.outputs.pr_number
