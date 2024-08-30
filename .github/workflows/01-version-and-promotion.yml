@@ -13,6 +13,8 @@ env:
 jobs:
   create-version:
     runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.set_version.outputs.new_version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.1.7
@@ -39,6 +41,10 @@ jobs:
           PATCH=$((VERSION_PARTS[2]+1))
           NEW_VERSION="v$MAJOR.$MINOR.$PATCH-$CONFIG_HASH"
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+      
+      - name: Set version output
+        id: set_version
+        run: echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Create and push new tag
         run: |
@@ -80,30 +86,25 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get latest version
-        run: |
-          LATEST_TAG=$(git describe --tags --abbrev=0 --match "v*")
-          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
-
       - name: Create promotion branch
         run: |
-          git checkout -b promote-${{ env.LATEST_TAG }}
-          git push -u origin promote-${{ env.LATEST_TAG }}
+          git checkout -b promote-${{ needs.create-version.outputs.new_version }}
+          git push -u origin promote-${{ needs.create-version.outputs.new_version }}
 
       - name: Create Pull Request to Staging
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: promote-${{ env.LATEST_TAG }}
+          branch: promote-${{ needs.create-version.outputs.new_version }}
           base: staging
-          title: "Promote ${{ env.LATEST_TAG }} to Staging"
+          title: "Promote ${{ needs.create-version.outputs.new_version }} to Staging"
           body: |
-            This PR promotes the release ${{ env.LATEST_TAG }} to the Staging environment.
+            This PR promotes the release ${{ needs.create-version.outputs.new_version }} to the Staging environment.
 
             Please review the changes and approve if everything looks correct.
 
   terraform-plan-staging:
-    needs: promote-to-staging
+    needs: [create-version, promote-to-staging]
     name: "Terraform Plan for Staging"
     runs-on: ubuntu-latest
     env:
@@ -112,7 +113,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.7
         with:
-          ref: promote-${{ env.LATEST_TAG }}
+          ref: promote-${{ needs.create-version.outputs.new_version }}
 
       - name: Upload Configuration
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.1
@@ -156,7 +157,7 @@ jobs:
             });
 
   send-notification:
-    needs: [terraform-plan-staging]
+    needs: [create-version, terraform-plan-staging]
     if: always()
     uses: ./.github/workflows/send-notification.yml
     with:
