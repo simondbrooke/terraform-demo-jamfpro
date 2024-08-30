@@ -1,5 +1,7 @@
 
-
+on:
+  workflow_dispatch:
+    
 - name: Print Environment Variables
   run: |
     echo "Printing all environment variables:"
