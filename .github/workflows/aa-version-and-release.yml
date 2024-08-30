@@ -70,8 +70,16 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - name: Checkout staging branch
+      - name: Checkout sandbox branch
         uses: actions/checkout@v4.1.7
+        with:
+          ref: sandbox
+          fetch-depth: 0
+
+      - name: Create a new branch for the release
+        run: |
+          git checkout -b tf-plan-${{ needs.create-version-and-release.outputs.new_version }}
+          git push origin tf-plan-${{ needs.create-version-and-release.outputs.new_version }}
 
       - name: Upload Configuration
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.1
