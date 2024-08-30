@@ -68,7 +68,6 @@ jobs:
             ${{ env.CONFIG_DIRECTORY }}/**/*.tf
             README.md
           generate_release_notes: true
-          discussion_category_name: Releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
