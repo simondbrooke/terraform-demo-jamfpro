@@ -1,0 +1,186 @@
+name: "Versioning and Release"
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_environment:
+        description: 'Source environment'
+        required: true
+        type: choice
+        options:
+          - sandbox
+          - staging
+      target_environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  TF_CLOUD_ORGANIZATION: "deploymenttheory"
+  TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
+  CONFIG_DIRECTORY: "workload/terraform/jamfpro"
+
+jobs:
+  validate-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate environment inputs
+        run: |
+          if [[ "${{ github.event.inputs.source_environment }}" == "sandbox" && "${{ github.event.inputs.target_environment }}" == "production" ]]; then
+            echo "Error: Cannot create PR from sandbox to production."
+            exit 1
+          fi
+          if [[ "${{ github.event.inputs.source_environment }}" == "${{ github.event.inputs.target_environment }}" ]]; then
+            echo "Error: Source and target environments cannot be the same."
+            exit 1
+          fi
+
+  create-version-and-release:
+    needs: validate-inputs
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.determine_version.outputs.new_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.1.7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.source_environment }}
+
+      - name: Set Terraform workspace
+        run: |
+          if [[ "${{ github.event.inputs.target_environment }}" == "production" ]]; then
+            echo "TF_WORKSPACE=terraform-jamfpro-production" >> $GITHUB_ENV
+          else
+            echo "TF_WORKSPACE=terraform-jamfpro-staging" >> $GITHUB_ENV
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5.2.0
+        with:
+          python-version: '3.x'
+
+      - name: Determine version and generate hash
+        id: determine_version
+        run: |
+          python workload/scripts/version_determinator.py
+        env:
+          CONFIG_DIRECTORY: ${{ env.CONFIG_DIRECTORY }}
+
+      - name: Display new release version
+        run: |
+          echo "New version: ${{ env.NEW_VERSION }}"
+
+      - name: Create and push new tag
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag ${{ env.NEW_VERSION }}
+          git push origin ${{ env.NEW_VERSION }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2.0.8
+        with:
+          tag_name: ${{ env.NEW_VERSION }}
+          name: Release ${{ env.NEW_VERSION }}
+          body: |
+            This release was manually triggered by @${{ github.actor }}.
+            Source: ${{ github.event.inputs.source_environment }}
+            Target: ${{ github.event.inputs.target_environment }}
+            Configuration Hash: ${{ env.CONFIG_HASH }}
+          draft: false
+          prerelease: ${{ github.event.inputs.target_environment != 'production' }}
+          files: |
+            ${{ env.CONFIG_DIRECTORY }}/**/*.tf
+            README.md
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  terraform-plan:
+    needs: create-version-and-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout target branch
+        uses: actions/checkout@v4.1.7
+        with:
+          ref: ${{ github.event.inputs.target_environment }}
+          fetch-depth: 0
+
+      - name: Create a new branch for the release
+        run: |
+          git checkout -b release-${{ needs.create-version-and-release.outputs.new_version }}
+          git push origin release-${{ needs.create-version-and-release.outputs.new_version }}
+
+      - name: Upload Configuration
+        uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.1
+        id: plan-upload
+        with:
+          workspace: ${{ env.TF_WORKSPACE }}
+          directory: ${{ env.CONFIG_DIRECTORY }}
+          speculative: true
+
+      - name: Create Plan Run
+        uses: hashicorp/tfc-workflows-github/actions/create-run@v1.3.1
+        id: plan-run
+        with:
+          workspace: ${{ env.TF_WORKSPACE }}
+          configuration_version: ${{ steps.plan-upload.outputs.configuration_version_id }}
+          plan_only: true
+
+      - name: Get Plan Output
+        uses: hashicorp/tfc-workflows-github/actions/plan-output@v1.3.1
+        id: plan-output
+        with:
+          plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
+
+      - name: Create PR with Terraform Plan
+        uses: actions/github-script@v7.0.1
+        id: create-pr
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const planSummary = `
+            ## Terraform Cloud Plan Output for ${{ github.event.inputs.target_environment }}
+
+            ### Plan Details:
+            - **Plan ID:** ${{ steps.plan-output.outputs.plan_id }}
+            - **Additions:** ${{ steps.plan-output.outputs.add }}
+            - **Changes:** ${{ steps.plan-output.outputs.change }}
+            - **Destructions:** ${{ steps.plan-output.outputs.destroy }}
+
+            ### Summary:
+            \`\`\`
+            Plan: ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy.
+            \`\`\`
+
+            [View Full Terraform Cloud Plan](${{ steps.plan-run.outputs.run_link }})
+            `;
+
+            const { data: pullRequest } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Terraform Plan for ${{ github.event.inputs.target_environment }} Release ${{ needs.create-version-and-release.outputs.new_version }}`,
+              head: `release-${{ needs.create-version-and-release.outputs.new_version }}`,
+              base: '${{ github.event.inputs.target_environment }}',
+              body: planSummary
+            });
+
+            core.setOutput('pull-request-url', pullRequest.html_url);
+
+  send-notification:
+    needs: [create-version-and-release, terraform-plan]
+    if: always()
+    uses: ./.github/workflows/send-notification.yml
+    with:
+      environment: ${{ github.event.inputs.target_environment }}
+      result: ${{ needs.terraform-plan.result == 'success' && 'success' || 'failure' }}
+      notification_channel: msteams
+      new_version: ${{ needs.create-version-and-release.outputs.new_version }}
+    secrets: inherit
