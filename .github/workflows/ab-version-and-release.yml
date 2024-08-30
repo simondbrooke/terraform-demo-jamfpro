@@ -51,15 +51,23 @@ jobs:
           ref: ${{ github.event.inputs.source_environment }}
 
       - name: Set Terraform workspace
+        id: set_workspace
         run: |
           if [[ "${{ github.event.inputs.target_environment }}" == "production" ]]; then
+            echo "Setting Terraform workspace to production"
             echo "TF_WORKSPACE=terraform-jamfpro-production" >> $GITHUB_ENV
+            echo "tf_workspace=terraform-jamfpro-production" >> $GITHUB_OUTPUT
           else
+            echo "Setting Terraform workspace to staging"
             echo "TF_WORKSPACE=terraform-jamfpro-staging" >> $GITHUB_ENV
+            echo "tf_workspace=terraform-jamfpro-staging" >> $GITHUB_OUTPUT
           fi
+      
+      - name: Verify Terraform workspace
+        run: |
           echo "TF_WORKSPACE from env: $TF_WORKSPACE"
           echo "TF_WORKSPACE from previous step: ${{ steps.set_workspace.outputs.tf_workspace }}"
-
+          
       - name: Set up Python
         uses: actions/setup-python@v5.2.0
         with:
