@@ -80,18 +80,35 @@ jobs:
   promote-to-staging:
     needs: create-version
     runs-on: ubuntu-latest
+    outputs:
+      changes_detected: ${{ steps.check_changes.outputs.changes_detected }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.1.7
         with:
           fetch-depth: 0
 
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git fetch origin staging
+          changes=$(git diff --name-only origin/staging...promote-${{ needs.create-version.outputs.new_version }})
+          if [ -n "$changes" ]; then
+            echo "changes_detected=true" >> $GITHUB_OUTPUT
+            echo "Changes detected. Proceeding with PR creation."
+          else
+            echo "changes_detected=false" >> $GITHUB_OUTPUT
+            echo "No changes detected. Skipping PR creation."
+          fi
+
       - name: Create promotion branch
+        if: steps.check_changes.outputs.changes_detected == 'true'
         run: |
           git checkout -b promote-${{ needs.create-version.outputs.new_version }}
           git push -u origin promote-${{ needs.create-version.outputs.new_version }}
 
       - name: Create Pull Request to Staging
+        if: steps.check_changes.outputs.changes_detected == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -100,11 +117,12 @@ jobs:
           title: "Promote ${{ needs.create-version.outputs.new_version }} to Staging"
           body: |
             This PR promotes the release ${{ needs.create-version.outputs.new_version }} to the Staging environment.
-
+            
             Please review the changes and approve if everything looks correct.
 
   terraform-plan-staging:
-    needs: [create-version, promote-to-staging]
+    needs: promote-to-staging
+    if: needs.promote-to-staging.outputs.changes_detected == 'true'
     name: "Terraform Plan for Staging"
     runs-on: ubuntu-latest
     env:
@@ -223,12 +241,12 @@ jobs:
               body: output
             });
 
-  send-notification:
-    needs: [create-version, terraform-plan-staging]
-    if: always()
-    uses: ./.github/workflows/send-notification.yml
-    with:
-      environment: "Staging"
-      result: ${{ needs.terraform-plan-staging.result == 'success' && 'success' || 'failure' }}
-      notification_channel: msteams
-    secrets: inherit
+      send-notification:
+        needs: [create-version, promote-to-staging, terraform-plan-staging]
+        if: always()
+        uses: ./.github/workflows/send-notification.yml
+        with:
+          environment: "Staging"
+          result: ${{ needs.promote-to-staging.outputs.changes_detected == 'true' && needs.terraform-plan-staging.result == 'success' && 'success' || (needs.promote-to-staging.outputs.changes_detected == 'false' && 'skipped' || 'failure') }}
+          notification_channel: msteams
+        secrets: inherit
