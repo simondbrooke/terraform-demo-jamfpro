@@ -8,6 +8,7 @@ on:
 env:
   TF_CLOUD_ORGANIZATION: "deploymenttheory"
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
+  TF_WORKSPACE: "terraform-jamfpro-production"
   CONFIG_DIRECTORY: "workload/terraform/jamfpro"
 
 jobs:
