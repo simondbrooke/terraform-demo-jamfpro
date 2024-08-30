@@ -1,0 +1,20 @@
+name: Cleanup Temporary Branch
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        description: 'The branch to be deleted'
+        required: true
+        type: string
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4.1.7
+
+      - name: Delete Temporary Branch
+        run: |
+          git push origin --delete ${{ inputs.branch }}
