@@ -7,24 +7,31 @@ def get_latest_tag():
     Retrieve the latest Git tag.
 
     Returns:
-        str: The latest Git tag, or 'v0.0.0' if no tags are found.
+        str: The latest Git tag, or None if no tags are found.
     """
     try:
-        return subprocess.check_output(['git', 'describe', '--tags', '--abbrev=0', '--match', 'v*']).decode().strip()
+        return subprocess.check_output(['git', 'describe', '--tags', '--abbrev=0', '--match', 'v*'], stderr=subprocess.DEVNULL).decode().strip()
     except subprocess.CalledProcessError:
-        return 'v0.0.0'
+        return None
 
 def get_changed_files(latest_tag):
     """
-    Get a list of files changed since the latest tag.
+    Get a list of files changed since the latest tag or all files if no tag exists.
 
     Args:
-        latest_tag (str): The latest Git tag.
+        latest_tag (str): The latest Git tag, or None if no tags exist.
 
     Returns:
         list: A list of changed file paths.
     """
-    return subprocess.check_output(['git', 'diff', '--name-only', latest_tag, 'HEAD']).decode().split('\n')
+    if latest_tag:
+        try:
+            return subprocess.check_output(['git', 'diff', '--name-only', latest_tag, 'HEAD']).decode().split('\n')
+        except subprocess.CalledProcessError:
+            print("Error: Unable to get changed files. Using all files instead.")
+    
+    # If no tag exists or there's an error, return all tracked files
+    return subprocess.check_output(['git', 'ls-files']).decode().split('\n')
 
 def read_file_content(file_path):
     """
@@ -213,6 +220,11 @@ def determine_version_increment(config_directory):
     latest_tag = get_latest_tag()
     changed_files = get_changed_files(latest_tag)
 
+    # If this is the first run (no tags), treat it as a major version
+    if not latest_tag:
+        print("No existing tags found. Treating as initial major version.")
+        return 'major'
+
     if is_new_resource_type(changed_files, config_directory):
         return 'major'
     if is_new_resource_iteration(changed_files, config_directory):
@@ -232,10 +244,15 @@ def main():
     increment_type = determine_version_increment(config_directory)
 
     latest_tag = get_latest_tag()
-    version_match = re.match(r'v(\d+)\.(\d+)\.(\d+)', latest_tag)
-    if version_match:
-        major, minor, patch = map(int, version_match.groups())
+    if latest_tag:
+        version_match = re.match(r'v(\d+)\.(\d+)\.(\d+)', latest_tag)
+        if version_match:
+            major, minor, patch = map(int, version_match.groups())
+        else:
+            print(f"Warning: Latest tag {latest_tag} does not match expected format. Starting from 0.0.0.")
+            major, minor, patch = 0, 0, 0
     else:
+        print("No existing tags found. Starting from version 0.0.0.")
         major, minor, patch = 0, 0, 0
 
     if increment_type == 'major':
@@ -251,7 +268,8 @@ def main():
     config_hash = subprocess.check_output(f"find {config_directory} -type f -name '*.tf' -exec sha256sum {{}} + | sha256sum | cut -c1-8", shell=True).decode().strip()
 
     new_version = f"v{major}.{minor}.{patch}-{config_hash}"
-    
+
+    print(f"New version determined: {new_version}")
     print(f"::set-output name=new_version::{new_version}")
     print(f"NEW_VERSION={new_version}", file=open(os.environ['GITHUB_ENV'], 'a'))
 
