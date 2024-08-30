@@ -109,11 +109,11 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            // 1. Prepare the output message with the detailed Terraform plan
-            const output = `
+            // 1. Prepare additional details for the Terraform Plan Output
+            const planId = `Plan ID: ${{ steps.plan-output.outputs.plan_id }}`;
+            const planStatus = `Plan Status: ${{ steps.plan-output.outputs.plan_status }}`;
+            const planSummary = `
             ## Terraform Cloud Plan Output for Staging
-            
-            ### Plan Status: ${{ steps.plan-output.outputs.plan_status }}
             
             ### Plan Details:
             - **Additions:** ${{ steps.plan-output.outputs.add }}
@@ -128,17 +128,37 @@ jobs:
             [View Full Terraform Cloud Plan](${{ steps.plan-run.outputs.run_link }})
             `;
       
-            // 2. Create a new pull request to the staging branch
+            // 2. Create a more detailed PR body with the extracted information
+            const prBody = `
+            ## Terraform Cloud Plan Output for Staging
+            
+            ${planStatus}
+            
+            ### Plan Details:
+            - **Plan ID:** ${{ steps.plan-output.outputs.plan_id }}
+            - **Additions:** ${{ steps.plan-output.outputs.add }}
+            - **Changes:** ${{ steps.plan-output.outputs.change }}
+            - **Destructions:** ${{ steps.plan-output.outputs.destroy }}
+            
+            ### Summary:
+            \`\`\`
+            Plan: ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy.
+            \`\`\`
+            
+            [View Full Terraform Cloud Plan](${{ steps.plan-run.outputs.run_link }})
+            `;
+      
+            // 3. Create a new pull request to the staging branch
             const { data: pullRequest } = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `Terraform Plan for Release ${{ needs.create-version-and-release.outputs.new_version }}`,
               head: `tf-plan-${{ needs.create-version-and-release.outputs.new_version }}`,
               base: 'staging',
-              body: output
+              body: prBody
             });
       
-            // 3. Output the created pull request URL for reference
+            // 4. Output the created pull request URL for reference
             core.setOutput('pull-request-url', pullRequest.html_url);
 
   send-notification:
