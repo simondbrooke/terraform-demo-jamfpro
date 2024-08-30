@@ -18,9 +18,6 @@ on:
       release_pr_number:
         required: false
         type: string
-      plan_pr_number:
-        required: false
-        type: string
 
 jobs:
   send-notification:
@@ -36,7 +33,6 @@ jobs:
             Deployment to ${{ inputs.environment }} ${{ inputs.result }}
             New Version: ${{ inputs.new_version }}
             Release PR: https://github.com/${{ github.repository }}/pull/${{ inputs.release_pr_number }}
-            Terraform Plan PR: https://github.com/${{ github.repository }}/pull/${{ inputs.plan_pr_number }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -48,7 +44,6 @@ jobs:
           ms-teams-webhook-uri: ${{ secrets.MSTEAMS_WEBHOOK_URL }}
           notification-summary: |
             Deployment to ${{ inputs.environment }} ${{ inputs.result }} | New Version: ${{ inputs.new_version }}<br>
-            Terraform Plan PR: <a href="https://github.com/${{ github.repository }}/pull/${{ inputs.plan_pr_number }}">PR #${{ inputs.plan_pr_number }}</a>
             Release PR: <a href="https://github.com/${{ github.repository }}/pull/${{ inputs.release_pr_number }}">PR #${{ inputs.release_pr_number }}</a>
           notification-color: ${{ inputs.result == 'success' && '28a745' || 'dc3545' }}
           timezone: "UTC"
