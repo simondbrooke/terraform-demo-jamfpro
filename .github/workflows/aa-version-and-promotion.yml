@@ -1,4 +1,4 @@
-name: "aa - versioning and promotion"
+name: "aa - versioning and release"
 
 on:
   schedule:
@@ -77,7 +77,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  promote-to-staging:
+  release-to-staging:
     needs: create-version
     runs-on: ubuntu-latest
     outputs:
@@ -92,7 +92,7 @@ jobs:
         id: check_changes
         run: |
           git fetch origin staging
-          changes=$(git diff --name-only origin/staging...promote-${{ needs.create-version.outputs.new_version }})
+          changes=$(git diff --name-only origin/staging...release-${{ needs.create-version.outputs.new_version }})
           if [ -n "$changes" ]; then
             echo "changes_detected=true" >> $GITHUB_OUTPUT
             echo "Changes detected. Proceeding with PR creation."
@@ -104,15 +104,15 @@ jobs:
       - name: Create promotion branch
         if: steps.check_changes.outputs.changes_detected == 'true'
         run: |
-          git checkout -b promote-${{ needs.create-version.outputs.new_version }}
-          git push -u origin promote-${{ needs.create-version.outputs.new_version }}
+          git checkout -b release-${{ needs.create-version.outputs.new_version }}
+          git push -u origin release-${{ needs.create-version.outputs.new_version }}
 
       - name: Create Pull Request to Staging
         if: steps.check_changes.outputs.changes_detected == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: promote-${{ needs.create-version.outputs.new_version }}
+          branch: release-${{ needs.create-version.outputs.new_version }}
           base: staging
           title: "Promote ${{ needs.create-version.outputs.new_version }} to Staging"
           body: |
@@ -121,8 +121,8 @@ jobs:
             Please review the changes and approve if everything looks correct.
 
   terraform-plan-staging:
-    needs: promote-to-staging
-    if: needs.promote-to-staging.outputs.changes_detected == 'true'
+    needs: release-to-staging
+    if: needs.release-to-staging.outputs.changes_detected == 'true'
     name: "Terraform Plan for Staging"
     runs-on: ubuntu-latest
     env:
@@ -131,7 +131,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.7
         with:
-          ref: promote-${{ needs.create-version.outputs.new_version }}
+          ref: release-${{ needs.create-version.outputs.new_version }}
 
       - name: Upload Configuration
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.1
@@ -161,7 +161,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const branchName = 'promote-${{ needs.create-version.outputs.new_version }}';
+            const branchName = 'release-${{ needs.create-version.outputs.new_version }}';
             
             // Try to find existing PR
             const prs = await github.rest.pulls.list({
@@ -242,11 +242,11 @@ jobs:
             });
 
   send-notification:
-    needs: [create-version, promote-to-staging, terraform-plan-staging]
+    needs: [create-version, release-to-staging, terraform-plan-staging]
     if: always()
     uses: ./.github/workflows/send-notification.yml
     with:
       environment: "Staging"
-      result: ${{ needs.promote-to-staging.outputs.changes_detected == 'true' && needs.terraform-plan-staging.result == 'success' && 'success' || (needs.promote-to-staging.outputs.changes_detected == 'false' && 'skipped' || 'failure') }}
+      result: ${{ needs.release-to-staging.outputs.changes_detected == 'true' && needs.terraform-plan-staging.result == 'success' && 'success' || (needs.release-to-staging.outputs.changes_detected == 'false' && 'skipped' || 'failure') }}
       notification_channel: msteams
     secrets: inherit
