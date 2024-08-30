@@ -177,6 +177,15 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const { execSync } = require('child_process');
+      
+            // Check if there are any differences between the branches
+            const diffOutput = execSync(`git diff origin/${{ github.event.inputs.target_environment }}...release-${{ needs.create-version-and-release.outputs.new_version }}`).toString();
+            
+            if (diffOutput.trim() === '') {
+              console.log('No differences found between branches. Skipping PR creation.');
+              return;
+            }
             const planSummary = `
             ## Terraform Cloud Plan Output for ${{ github.event.inputs.target_environment }}
 
