@@ -81,6 +81,9 @@ jobs:
   release-to-staging:
     needs: create-version
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       release_pr_number: ${{ steps.create_release_pr.outputs.pull-request-number }}
     steps:
@@ -89,16 +92,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Create release branch
-        run: |
-          git checkout -b release-${{ needs.create-version.outputs.new_version }}
-          git push -u origin release-${{ needs.create-version.outputs.new_version }}
-
       - name: Create Release PR to Staging
         id: create_release_pr
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Release ${{ needs.create-version.outputs.new_version }} to Staging"
           branch: release-${{ needs.create-version.outputs.new_version }}
           base: staging
           title: "Release ${{ needs.create-version.outputs.new_version }} to Staging"
@@ -106,10 +105,25 @@ jobs:
             This PR releases version ${{ needs.create-version.outputs.new_version }} to the Staging environment.
             
             Please review the changes and approve if everything looks correct.
+          delete-branch: true
+
+      - name: Check outputs
+        if: steps.create_release_pr.outputs.pull-request-number
+        run: |
+          echo "Pull Request Number - ${{ steps.create_release_pr.outputs.pull-request-number }}"
+          echo "Pull Request URL - ${{ steps.create_release_pr.outputs.pull-request-url }}"
+
+      - name: No PR created
+        if: steps.create_release_pr.outputs.pull-request-number == ''
+        run: |
+          echo "No pull request was created. This might be because there are no changes between the current state and the staging branch."
 
   terraform-plan-staging:
     needs: [create-version, release-to-staging]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       plan_pr_number: ${{ steps.create_plan_pr.outputs.pull-request-number }}
     steps:
