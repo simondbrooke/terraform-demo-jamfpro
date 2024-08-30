@@ -46,6 +46,10 @@ jobs:
           git config user.email github-actions@github.com
           git tag $NEW_VERSION
           git push origin $NEW_VERSION
+      
+      - name: Get current date and time
+        id: current_time
+        run: echo "time=$(date +'%Y-%m-%d %H:%M:%S %Z')" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2.0.8
@@ -53,7 +57,9 @@ jobs:
           tag_name: ${{ env.NEW_VERSION }}
           name: Sandbox Release ${{ env.NEW_VERSION }}
           body: |
-            This is an automated release for the Sandbox environment.
+            ${{ github.event_name == 'schedule' && 'This is an automated release for the Sandbox environment, triggered by the scheduled workflow.' || format('This release was manually triggered by @{0}.', github.actor) }}
+            
+            Release Date and Time: ${{ steps.current_time.outputs.time }}
             
             Configuration Hash: ${{ env.CONFIG_HASH }}
           draft: false
