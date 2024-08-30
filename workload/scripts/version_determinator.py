@@ -270,8 +270,14 @@ def main():
     new_version = f"v{major}.{minor}.{patch}-{config_hash}"
 
     print(f"New version determined: {new_version}")
-    print(f"::set-output name=new_version::{new_version}")
-    print(f"NEW_VERSION={new_version}", file=open(os.environ['GITHUB_ENV'], 'a'))
+    
+    # Update to use GITHUB_OUTPUT environment file
+    with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as f:
+        f.write(f"new_version={new_version}\n")
+    
+    # Set environment variable
+    with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as f:
+        f.write(f"NEW_VERSION={new_version}\n")
 
 if __name__ == "__main__":
     main()
