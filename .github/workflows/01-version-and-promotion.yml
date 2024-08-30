@@ -1,4 +1,4 @@
-name: "01 - Version and Promotion"
+name: "01 - Sandbox Versioning and Promotion"
 
 on:
   schedule:
@@ -48,18 +48,23 @@ jobs:
           git push origin $NEW_VERSION
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2.0.8
         with:
           tag_name: ${{ env.NEW_VERSION }}
-          release_name: Sandbox Release ${{ env.NEW_VERSION }}
+          name: Sandbox Release ${{ env.NEW_VERSION }}
           body: |
             This is an automated release for the Sandbox environment.
             
             Configuration Hash: ${{ env.CONFIG_HASH }}
           draft: false
           prerelease: false
+          files: |
+            ${{ env.CONFIG_DIRECTORY }}/**/*.tf
+            README.md
+          generate_release_notes: true
+          discussion_category_name: Releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   promote-to-staging:
     needs: create-sandbox-version
