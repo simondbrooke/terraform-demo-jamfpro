@@ -41,7 +41,7 @@ jobs:
           PATCH=$((VERSION_PARTS[2]+1))
           NEW_VERSION="v$MAJOR.$MINOR.$PATCH-$CONFIG_HASH"
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
-      
+
       - name: Set version output
         id: set_version
         run: echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
@@ -81,52 +81,36 @@ jobs:
     needs: create-version
     runs-on: ubuntu-latest
     outputs:
-      changes_detected: ${{ steps.check_changes.outputs.changes_detected }}
+      release_pr_number: ${{ steps.create_release_pr.outputs.pull-request-number }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.1.7
         with:
           fetch-depth: 0
 
-      - name: Check for changes
-        id: check_changes
-        run: |
-          git fetch origin staging
-          changes=$(git diff --name-only origin/staging...release-${{ needs.create-version.outputs.new_version }})
-          if [ -n "$changes" ]; then
-            echo "changes_detected=true" >> $GITHUB_OUTPUT
-            echo "Changes detected. Proceeding with PR creation."
-          else
-            echo "changes_detected=false" >> $GITHUB_OUTPUT
-            echo "No changes detected. Skipping PR creation."
-          fi
-
-      - name: Create promotion branch
-        if: steps.check_changes.outputs.changes_detected == 'true'
+      - name: Create release branch
         run: |
           git checkout -b release-${{ needs.create-version.outputs.new_version }}
           git push -u origin release-${{ needs.create-version.outputs.new_version }}
 
-      - name: Create Pull Request to Staging
-        if: steps.check_changes.outputs.changes_detected == 'true'
+      - name: Create Release PR to Staging
+        id: create_release_pr
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: release-${{ needs.create-version.outputs.new_version }}
           base: staging
-          title: "Promote ${{ needs.create-version.outputs.new_version }} to Staging"
+          title: "Release ${{ needs.create-version.outputs.new_version }} to Staging"
           body: |
-            This PR promotes the release ${{ needs.create-version.outputs.new_version }} to the Staging environment.
+            This PR releases version ${{ needs.create-version.outputs.new_version }} to the Staging environment.
             
             Please review the changes and approve if everything looks correct.
 
   terraform-plan-staging:
-    needs: release-to-staging
-    if: needs.release-to-staging.outputs.changes_detected == 'true'
-    name: "Terraform Plan for Staging"
+    needs: [create-version, release-to-staging]
     runs-on: ubuntu-latest
-    env:
-      TF_WORKSPACE: "terraform-jamfpro-staging"
+    outputs:
+      plan_pr_number: ${{ steps.create_plan_pr.outputs.pull-request-number }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.7
@@ -155,98 +139,56 @@ jobs:
         with:
           plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
 
-      - name: Find or Create Pull Request
-        id: find_or_create_pr
-        uses: actions/github-script@v7.0.1
+      - name: Create Terraform Plan PR
+        id: create_plan_pr
+        uses: peter-evans/create-pull-request@v5
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const branchName = 'release-${{ needs.create-version.outputs.new_version }}';
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: tf-plan-${{ needs.create-version.outputs.new_version }}
+          base: staging
+          title: "Terraform Plan for Release ${{ needs.create-version.outputs.new_version }}"
+          body: |
+            ## Terraform Cloud Plan Output for Staging
             
-            // Try to find existing PR
-            const prs = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              head: branchName,
-              base: 'staging'
-            });
-            
-            if (prs.data.length > 0) {
-              console.log('Existing PR found');
-              return prs.data[0].number;
-            }
-            
-            // If no PR exists, create one
-            console.log('No existing PR found. Creating a new one.');
-            const newPr = await github.rest.pulls.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `Promote ${{ needs.create-version.outputs.new_version }} to Staging`,
-              head: branchName,
-              base: 'staging',
-              body: 'This PR was automatically created by the CI/CD pipeline to promote the latest changes to staging.'
-            });
-            
-            return newPr.data.number;
-
-      - name: Update PR
-        if: steps.find_pr.outputs.pr_number
-        uses: actions/github-script@v7.0.1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const prNumber = ${{ steps.find_pr.outputs.pr_number }};
-            const planStatus = '${{ steps.plan-output.outputs.plan_status }}';
-            const planDetails = `
-              Additions: ${{ steps.plan-output.outputs.add }}
-              Changes: ${{ steps.plan-output.outputs.change }}
-              Destructions: ${{ steps.plan-output.outputs.destroy }}
-            `;
-            
-            let statusEmoji;
-            switch(planStatus) {
-              case 'planned':
-                statusEmoji = '✅';
-                break;
-              case 'errored':
-                statusEmoji = '❌';
-                break;
-              default:
-                statusEmoji = '⚠️';
-            }
-            
-            const output = `## Terraform Cloud Plan Output for Staging ${statusEmoji}
-            
-            ### Plan Status: ${planStatus}
+            ### Plan Status: ${{ steps.plan-output.outputs.plan_status }}
             
             ### Plan Details:
-            ${planDetails}
+            Additions: ${{ steps.plan-output.outputs.add }}
+            Changes: ${{ steps.plan-output.outputs.change }}
+            Destructions: ${{ steps.plan-output.outputs.destroy }}
             
             ### Summary:
-            \`\`\`
+            ```
             Plan: ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy.
-            \`\`\`
+            ```
             
             [View Full Terraform Cloud Plan](${{ steps.plan-run.outputs.run_link }})
             
             ---
             
-            Please review this plan carefully. If it looks good, approve the pull request to apply these changes to the staging environment.`;
-            
-            await github.rest.issues.createComment({
-              issue_number: prNumber,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            });
+            Please review this plan carefully. If it looks good, approve this PR to apply these changes to the staging environment.
+
+  cleanup:
+    needs: [create-version, release-to-staging, terraform-plan-staging]
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.1.7
+
+      - name: Delete release branch
+        run: |
+          git push origin --delete release-${{ needs.create-version.outputs.new_version }}
 
   send-notification:
-    needs: [create-version, release-to-staging, terraform-plan-staging]
+    needs: [create-version, release-to-staging, terraform-plan-staging, cleanup]
     if: always()
     uses: ./.github/workflows/send-notification.yml
     with:
       environment: "Staging"
-      result: ${{ needs.release-to-staging.outputs.changes_detected == 'true' && needs.terraform-plan-staging.result == 'success' && 'success' || (needs.release-to-staging.outputs.changes_detected == 'false' && 'skipped' || 'failure') }}
+      result: ${{ needs.cleanup.result == 'success' && 'success' || 'failure' }}
       notification_channel: msteams
+      new_version: ${{ needs.create-version.outputs.new_version }}
+      release_pr_number: ${{ needs.release-to-staging.outputs.release_pr_number }}
+      plan_pr_number: ${{ needs.terraform-plan-staging.outputs.plan_pr_number }}
     secrets: inherit

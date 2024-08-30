@@ -12,6 +12,15 @@ on:
       notification_channel:
         required: true
         type: string
+      new_version:
+        required: false
+        type: string
+      release_pr_number:
+        required: false
+        type: string
+      plan_pr_number:
+        required: false
+        type: string
 
 jobs:
   send-notification:
@@ -23,7 +32,11 @@ jobs:
         with:
           status: ${{ inputs.result }}
           fields: repo,message,commit,author,action,eventName,ref,workflow,job,took,pullRequest
-          text: "Deployment to ${{ inputs.environment }} ${{ inputs.result }}"
+          text: |
+            Deployment to ${{ inputs.environment }} ${{ inputs.result }}
+            New Version: ${{ inputs.new_version }}
+            Release PR: https://github.com/${{ github.repository }}/pull/${{ inputs.release_pr_number }}
+            Terraform Plan PR: https://github.com/${{ github.repository }}/pull/${{ inputs.plan_pr_number }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -32,8 +45,12 @@ jobs:
         uses: jdcargile/ms-teams-notification@v1.4
         with:
           github-token: ${{ github.token }}
-          ms-teams-webhook-uri: ${{ secrets.MSTEAMS_WEBHOOK_URL }}
-          notification-summary: "Deployment to ${{ inputs.environment }} ${{ inputs.result }}"
-          notification-color: ${{ inputs.result == 'success' && '3066993' || 'D3222A' }}
+          ms-teams-webhook-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI }}
+          notification-summary: |
+            Deployment to ${{ inputs.environment }} ${{ inputs.result }}
+            New Version: ${{ inputs.new_version }}
+            Release PR: https://github.com/${{ github.repository }}/pull/${{ inputs.release_pr_number }}
+            Terraform Plan PR: https://github.com/${{ github.repository }}/pull/${{ inputs.plan_pr_number }}
+          notification-color: ${{ inputs.result == 'success' && '28a745' || 'dc3545' }}
           timezone: "UTC"
           verbose-logging: true
