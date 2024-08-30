@@ -1,4 +1,4 @@
-name: "01 - sandbox versioning and promotion"
+name: "01 - versioning and promotion"
 
 on:
   schedule:
@@ -11,7 +11,7 @@ env:
   CONFIG_DIRECTORY: "workload/terraform/jamfpro"
 
 jobs:
-  create-sandbox-version:
+  create-version:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -24,20 +24,20 @@ jobs:
           CONFIG_HASH=$(find ${{ env.CONFIG_DIRECTORY }} -type f -name '*.tf' -exec sha256sum {} + | sha256sum | cut -c1-8)
           echo "CONFIG_HASH=$CONFIG_HASH" >> $GITHUB_ENV
 
-      - name: Get latest sandbox version
+      - name: Get latest version
         id: get_latest_tag
         run: |
-          LATEST_TAG=$(git describe --tags --abbrev=0 --match "sandbox-v*" 2>/dev/null || echo "sandbox-v0.0.0")
+          LATEST_TAG=$(git describe --tags --abbrev=0 --match "v*" 2>/dev/null || echo "v0.0.0")
           echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
 
-      - name: Increment version and append hash
+      - name: Increment version
         run: |
-          VERSION=$(echo $LATEST_TAG | sed 's/sandbox-v//')
+          VERSION=$(echo $LATEST_TAG | sed 's/v//' | cut -d'-' -f1)
           IFS='.' read -ra VERSION_PARTS <<< "$VERSION"
           MAJOR=${VERSION_PARTS[0]}
           MINOR=${VERSION_PARTS[1]}
           PATCH=$((VERSION_PARTS[2]+1))
-          NEW_VERSION="sandbox-v$MAJOR.$MINOR.$PATCH-$CONFIG_HASH"
+          NEW_VERSION="v$MAJOR.$MINOR.$PATCH-$CONFIG_HASH"
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
       - name: Create and push new tag
@@ -46,7 +46,7 @@ jobs:
           git config user.email github-actions@github.com
           git tag $NEW_VERSION
           git push origin $NEW_VERSION
-      
+
       - name: Get current date and time
         id: current_time
         run: echo "time=$(date +'%Y-%m-%d %H:%M:%S %Z')" >> $GITHUB_OUTPUT
@@ -55,12 +55,12 @@ jobs:
         uses: softprops/action-gh-release@v2.0.8
         with:
           tag_name: ${{ env.NEW_VERSION }}
-          name: Sandbox Release ${{ env.NEW_VERSION }}
+          name: Release ${{ env.NEW_VERSION }}
           body: |
-            ${{ github.event_name == 'schedule' && 'This is an automated release for the Sandbox environment, triggered by the scheduled workflow.' || format('This release was manually triggered by @{0}.', github.actor) }}
-            
+            ${{ github.event_name == 'schedule' && 'This is an automated release triggered by the scheduled workflow.' || format('This release was manually triggered by @{0}.', github.actor) }}
+
             Release Date and Time: ${{ steps.current_time.outputs.time }}
-            
+
             Configuration Hash: ${{ env.CONFIG_HASH }}
           draft: false
           prerelease: false
@@ -72,7 +72,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   promote-to-staging:
-    needs: create-sandbox-version
+    needs: create-version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -80,26 +80,26 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get latest sandbox version
+      - name: Get latest version
         run: |
-          LATEST_TAG=$(git describe --tags --abbrev=0 --match "sandbox-v*")
+          LATEST_TAG=$(git describe --tags --abbrev=0 --match "v*")
           echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
 
       - name: Create promotion branch
         run: |
-          git checkout -b promote-${{ env.LATEST_TAG }}-to-staging
-          git push -u origin promote-${{ env.LATEST_TAG }}-to-staging
+          git checkout -b promote-${{ env.LATEST_TAG }}
+          git push -u origin promote-${{ env.LATEST_TAG }}
 
       - name: Create Pull Request to Staging
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: promote-${{ env.LATEST_TAG }}-to-staging
+          branch: promote-${{ env.LATEST_TAG }}
           base: staging
           title: "Promote ${{ env.LATEST_TAG }} to Staging"
           body: |
-            This PR promotes the Sandbox release ${{ env.LATEST_TAG }} to the Staging environment.
-            
+            This PR promotes the release ${{ env.LATEST_TAG }} to the Staging environment.
+
             Please review the changes and approve if everything looks correct.
 
   terraform-plan-staging:
@@ -112,7 +112,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.7
         with:
-          ref: promote-${{ env.LATEST_TAG }}-to-staging
+          ref: promote-${{ env.LATEST_TAG }}
 
       - name: Upload Configuration
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.1
