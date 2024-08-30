@@ -1,0 +1,156 @@
+name: "01 - Version and Promotion"
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly on Sunday at midnight
+  workflow_dispatch:  # Allow manual trigger
+
+env:
+  TF_CLOUD_ORGANIZATION: "deploymenttheory"
+  TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
+  CONFIG_DIRECTORY: "workload/terraform/jamfpro"
+
+jobs:
+  create-sandbox-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.1.7
+        with:
+          fetch-depth: 0  # Fetch all history for all branches and tags
+
+      - name: Generate hash from Terraform configurations
+        run: |
+          CONFIG_HASH=$(find ${{ env.CONFIG_DIRECTORY }} -type f -name '*.tf' -exec sha256sum {} + | sha256sum | cut -c1-8)
+          echo "CONFIG_HASH=$CONFIG_HASH" >> $GITHUB_ENV
+
+      - name: Get latest sandbox version
+        id: get_latest_tag
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 --match "sandbox-v*" 2>/dev/null || echo "sandbox-v0.0.0")
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+
+      - name: Increment version and append hash
+        run: |
+          VERSION=$(echo $LATEST_TAG | sed 's/sandbox-v//')
+          IFS='.' read -ra VERSION_PARTS <<< "$VERSION"
+          MAJOR=${VERSION_PARTS[0]}
+          MINOR=${VERSION_PARTS[1]}
+          PATCH=$((VERSION_PARTS[2]+1))
+          NEW_VERSION="sandbox-v$MAJOR.$MINOR.$PATCH-$CONFIG_HASH"
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Create and push new tag
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag $NEW_VERSION
+          git push origin $NEW_VERSION
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.NEW_VERSION }}
+          release_name: Sandbox Release ${{ env.NEW_VERSION }}
+          body: |
+            This is an automated release for the Sandbox environment.
+            
+            Configuration Hash: ${{ env.CONFIG_HASH }}
+          draft: false
+          prerelease: false
+
+  promote-to-staging:
+    needs: create-sandbox-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.1.7
+        with:
+          fetch-depth: 0
+
+      - name: Get latest sandbox version
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 --match "sandbox-v*")
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+
+      - name: Create promotion branch
+        run: |
+          git checkout -b promote-${{ env.LATEST_TAG }}-to-staging
+          git push -u origin promote-${{ env.LATEST_TAG }}-to-staging
+
+      - name: Create Pull Request to Staging
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: promote-${{ env.LATEST_TAG }}-to-staging
+          base: staging
+          title: "Promote ${{ env.LATEST_TAG }} to Staging"
+          body: |
+            This PR promotes the Sandbox release ${{ env.LATEST_TAG }} to the Staging environment.
+            
+            Please review the changes and approve if everything looks correct.
+
+  terraform-plan-staging:
+    needs: promote-to-staging
+    name: "Terraform Plan for Staging"
+    runs-on: ubuntu-latest
+    env:
+      TF_WORKSPACE: "terraform-jamfpro-staging"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.7
+        with:
+          ref: promote-${{ env.LATEST_TAG }}-to-staging
+
+      - name: Upload Configuration
+        uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.1
+        id: plan-upload
+        with:
+          workspace: ${{ env.TF_WORKSPACE }}
+          directory: ${{ env.CONFIG_DIRECTORY }}
+          speculative: true
+
+      - name: Create Plan Run
+        uses: hashicorp/tfc-workflows-github/actions/create-run@v1.3.1
+        id: plan-run
+        with:
+          workspace: ${{ env.TF_WORKSPACE }}
+          configuration_version: ${{ steps.plan-upload.outputs.configuration_version_id }}
+          plan_only: true
+
+      - name: Get Plan Output
+        uses: hashicorp/tfc-workflows-github/actions/plan-output@v1.3.1
+        id: plan-output
+        with:
+          plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
+
+      - name: Update PR
+        uses: actions/github-script@v7.0.1
+        id: plan-comment
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Cloud Plan Output for Staging
+              \`\`\`
+              Plan: ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy.
+              \`\`\`
+              [Terraform Cloud Plan](${{ steps.plan-run.outputs.run_link }})
+              `;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+
+  send-notification:
+    needs: [terraform-plan-staging]
+    if: always()
+    uses: ./.github/workflows/send-notification.yml
+    with:
+      environment: "Staging"
+      result: ${{ needs.terraform-plan-staging.result == 'success' && 'success' || 'failure' }}
+      notification_channel: msteams
+    secrets: inherit
