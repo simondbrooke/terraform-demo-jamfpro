@@ -241,12 +241,12 @@ jobs:
               body: output
             });
 
-      send-notification:
-        needs: [create-version, promote-to-staging, terraform-plan-staging]
-        if: always()
-        uses: ./.github/workflows/send-notification.yml
-        with:
-          environment: "Staging"
-          result: ${{ needs.promote-to-staging.outputs.changes_detected == 'true' && needs.terraform-plan-staging.result == 'success' && 'success' || (needs.promote-to-staging.outputs.changes_detected == 'false' && 'skipped' || 'failure') }}
-          notification_channel: msteams
-        secrets: inherit
+  send-notification:
+    needs: [create-version, promote-to-staging, terraform-plan-staging]
+    if: always()
+    uses: ./.github/workflows/send-notification.yml
+    with:
+      environment: "Staging"
+      result: ${{ needs.promote-to-staging.outputs.changes_detected == 'true' && needs.terraform-plan-staging.result == 'success' && 'success' || (needs.promote-to-staging.outputs.changes_detected == 'false' && 'skipped' || 'failure') }}
+      notification_channel: msteams
+    secrets: inherit
