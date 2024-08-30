@@ -78,8 +78,8 @@ jobs:
 
       - name: Create a new branch for the release
         run: |
-          git checkout -b tf-plan-${{ needs.create-version-and-release.outputs.new_version }}
-          git push origin tf-plan-${{ needs.create-version-and-release.outputs.new_version }}
+          git checkout -b release-${{ needs.create-version-and-release.outputs.new_version }}
+          git push origin release-${{ needs.create-version-and-release.outputs.new_version }}
 
       - name: Upload Configuration
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.1
@@ -153,7 +153,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `Terraform Plan for Release ${{ needs.create-version-and-release.outputs.new_version }}`,
-              head: `tf-plan-${{ needs.create-version-and-release.outputs.new_version }}`,
+              head: `release-${{ needs.create-version-and-release.outputs.new_version }}`,
               base: 'staging',
               body: prBody
             });
