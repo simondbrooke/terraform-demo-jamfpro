@@ -188,7 +188,6 @@ jobs:
             ```
             
             [View Full Terraform Cloud Plan](${{ steps.plan-run.outputs.run_link }})
-          delete-branch: true
 
       - name: Check outputs
         if: steps.create_plan_pr.outputs.pull-request-number
