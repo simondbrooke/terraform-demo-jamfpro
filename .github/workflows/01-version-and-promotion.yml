@@ -137,6 +137,25 @@ jobs:
         with:
           plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
 
+      - name: Find Pull Request
+        id: find_pr
+        uses: actions/github-script@v7.0.1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: 'promote-${{ needs.create-version.outputs.new_version }}',
+              base: 'staging'
+            });
+            if (prs.data.length === 0) {
+              core.setFailed('No matching pull request found');
+              return;
+            }
+            return prs.data[0].number;
+
       - name: Update PR
         if: steps.find_pr.outputs.pr_number
         uses: actions/github-script@v7.0.1
