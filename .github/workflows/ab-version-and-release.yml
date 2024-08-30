@@ -67,7 +67,7 @@ jobs:
         run: |
           echo "TF_WORKSPACE from env: $TF_WORKSPACE"
           echo "TF_WORKSPACE from previous step: ${{ steps.set_workspace.outputs.tf_workspace }}"
-          
+
       - name: Set up Python
         uses: actions/setup-python@v5.2.0
         with:
@@ -132,15 +132,15 @@ jobs:
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.1
         id: plan-upload
         with:
-          workspace: ${{ steps.set_workspace.outputs.tf_workspace }}
+          workspace: ${{ env.TF_WORKSPACE }}
           directory: ${{ env.CONFIG_DIRECTORY }}
           speculative: true
-  
+
       - name: Create Plan Run
         uses: hashicorp/tfc-workflows-github/actions/create-run@v1.3.1
         id: plan-run
         with:
-          workspace: ${{ steps.set_workspace.outputs.tf_workspace }}
+          workspace: ${{ env.TF_WORKSPACE }}
           configuration_version: ${{ steps.plan-upload.outputs.configuration_version_id }}
           plan_only: true
 
