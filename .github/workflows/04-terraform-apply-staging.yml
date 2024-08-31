@@ -50,33 +50,15 @@ jobs:
     needs: [terraform-apply]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4.1.7
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.PAT_TOKEN }}
-
-      - name: Get Latest Release Version
-        id: get_version
+      - name: Get branch name
+        id: get_branch
         run: |
-          RESPONSE=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest)
-          echo "API Response: $RESPONSE"
-          if [ "$(echo $RESPONSE | jq -r '.message')" = "Not Found" ]; then
-            echo "No releases found. Exiting."
-            exit 1
-          fi
-          LATEST_RELEASE=$(echo $RESPONSE | jq -r .tag_name)
-          if [ -z "$LATEST_RELEASE" ] || [ "$LATEST_RELEASE" = "null" ]; then
-            echo "Failed to get latest release version. Exiting."
-            exit 1
-          fi
-          echo "LATEST_RELEASE=${LATEST_RELEASE}" >> $GITHUB_ENV
-          echo "Latest release version: $LATEST_RELEASE"
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
 
-      - name: Set and Delete Branch
-        id: set_and_delete_branch
+      - name: Delete release branch
         run: |
-          BRANCH_NAME="release-${LATEST_RELEASE}"
+          BRANCH_NAME="${{ steps.get_branch.outputs.branch_name }}"
           echo "Attempting to delete branch: ${BRANCH_NAME}"
           git push origin --delete ${BRANCH_NAME} || echo "Branch ${BRANCH_NAME} does not exist or couldn't be deleted"
         env:
@@ -84,11 +66,12 @@ jobs:
 
       - name: Confirm deletion
         run: |
-          if git ls-remote --exit-code --heads origin release-${LATEST_RELEASE}; then
-            echo "Branch release-${LATEST_RELEASE} still exists. Deletion failed."
+          BRANCH_NAME="${{ steps.get_branch.outputs.branch_name }}"
+          if git ls-remote --exit-code --heads origin ${BRANCH_NAME}; then
+            echo "Branch ${BRANCH_NAME} still exists. Deletion failed."
             exit 1
           else
-            echo "Branch release-${LATEST_RELEASE} has been successfully deleted."
+            echo "Branch ${BRANCH_NAME} has been successfully deleted."
           fi
 
   send-notification:
