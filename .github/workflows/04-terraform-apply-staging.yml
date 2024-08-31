@@ -62,8 +62,8 @@ jobs:
           echo "Attempting to delete branch: ${BRANCH_NAME}"
           git push origin --delete ${BRANCH_NAME} || echo "Branch ${BRANCH_NAME} does not exist or couldn't be deleted"
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}  # Use PAT_TOKEN for authentication
+  
       - name: Confirm deletion
         run: |
           BRANCH_NAME="${{ steps.get_branch.outputs.branch_name }}"
