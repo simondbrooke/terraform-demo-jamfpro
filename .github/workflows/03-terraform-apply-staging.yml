@@ -1,4 +1,4 @@
-name: "04 - terraform apply: staging"
+name: "03 - terraform apply: staging"
 
 on:
   pull_request:
