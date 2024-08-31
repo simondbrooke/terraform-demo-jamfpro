@@ -265,8 +265,19 @@ def main():
     else:
         patch += 1
 
-    new_version = f"v{major}.{minor}.{patch}"
-    print(new_version, end='') 
+    #config_hash = subprocess.check_output(f"find {config_directory} -type f -name '*.tf' -exec sha256sum {{}} + | sha256sum | cut -c1-8", shell=True).decode().strip()
+
+    new_version = f"v{major}.{minor}.{patch}-"
+
+    print(f"New version determined: {new_version}")
+    
+    # Update to use GITHUB_OUTPUT environment file
+    with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as f:
+        f.write(f"new_version={new_version}\n")
+    
+    # Set environment variable
+    with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as f:
+        f.write(f"NEW_VERSION={new_version}\n")
 
 if __name__ == "__main__":
     main()
