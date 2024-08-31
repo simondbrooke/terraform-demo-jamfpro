@@ -114,10 +114,10 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - name: Checkout target branch
+      - name: Checkout release branch
         uses: actions/checkout@v4.1.7
         with:
-          ref: ${{ github.event.inputs.target_environment }}
+          ref: release-${{ needs.create-version-and-release.outputs.new_version }}
           fetch-depth: 0
       
       - name: Set Terraform workspace
