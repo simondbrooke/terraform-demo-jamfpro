@@ -13,6 +13,13 @@ on:
         required: false
         type: boolean
         default: false
+    outputs:
+      new_version:
+        description: "The new version number"
+        value: ${{ jobs.create-version-and-release.outputs.new_version }}
+      config_hash:
+        description: "The configuration hash"
+        value: ${{ jobs.create-version-and-release.outputs.config_hash }}
 
 jobs:
   create-version-and-release:
