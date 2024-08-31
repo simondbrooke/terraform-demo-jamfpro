@@ -15,10 +15,10 @@ on:
         default: false
     outputs:
       new_version:
-        description: "The new version number"
+        description: "The new release version number"
         value: ${{ jobs.create-version-and-release.outputs.new_version }}
       config_hash:
-        description: "The configuration hash"
+        description: "The new release configuration hash"
         value: ${{ jobs.create-version-and-release.outputs.config_hash }}
 
 jobs:
