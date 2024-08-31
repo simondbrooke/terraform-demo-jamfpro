@@ -57,7 +57,7 @@ jobs:
       - name: Verify Terraform Cloud API Token
         if: ${{ inputs.debug }}
         run: |
-          if [ -z "$TF_API_TOKEN" ]; then
+          if [ -z "${{ secrets.TF_API_TOKEN }}" ]; then
             echo "Error: TF_API_TOKEN is not set"
             exit 1
           else
