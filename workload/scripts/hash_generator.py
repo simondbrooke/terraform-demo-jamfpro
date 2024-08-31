@@ -30,7 +30,7 @@ def set_output(name, value):
         name (str): The name of the output variable.
         value (str): The value to set.
     """
-    with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+    with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as fh:
         print(f'{name}={value}', file=fh)
 
 def set_env(name, value):
@@ -41,7 +41,7 @@ def set_env(name, value):
         name (str): The name of the environment variable.
         value (str): The value to set.
     """
-    with open(os.environ['GITHUB_ENV'], 'a') as fh:
+    with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as fh:
         print(f'{name}={value}', file=fh)
 
 def main():

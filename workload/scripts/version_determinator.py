@@ -1,6 +1,7 @@
 import os
 import subprocess
 import re
+import sys
 
 def get_latest_tag():
     """
@@ -236,11 +237,51 @@ def determine_version_increment(config_directory):
 
     return 'patch'  # Default to patch if no conditions are met
 
+def set_output(name, value):
+    """
+    Set a GitHub Actions output variable.
+
+    Args:
+        name (str): The name of the output variable.
+        value (str): The value to set.
+    """
+    with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as fh:
+        print(f'{name}={value}', file=fh)
+
+def set_env(name, value):
+    """
+    Set a GitHub Actions environment variable.
+
+    Args:
+        name (str): The name of the environment variable.
+        value (str): The value to set.
+    """
+    with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as fh:
+        print(f'{name}={value}', file=fh)
+
 def main():
     """
     Main function to determine and set the new version based on Terraform changes.
+
+    Usage:
+        python version_determinator.py <config_directory>
+
+    Args:
+        config_directory (str): The directory containing Terraform configurations.
+
+    Exits:
+        0: Success
+        1: Incorrect number of arguments or invalid directory
     """
-    config_directory = os.environ.get('CONFIG_DIRECTORY', 'workload/terraform/jamfpro')
+    if len(sys.argv) != 2:
+        print("Usage: python version_determinator.py <config_directory>", file=sys.stderr)
+        sys.exit(1)
+
+    config_directory = sys.argv[1]
+    if not os.path.isdir(config_directory):
+        print(f"Error: {config_directory} is not a valid directory", file=sys.stderr)
+        sys.exit(1)
+
     increment_type = determine_version_increment(config_directory)
 
     latest_tag = get_latest_tag()
@@ -265,19 +306,16 @@ def main():
     else:
         patch += 1
 
-    #config_hash = subprocess.check_output(f"find {config_directory} -type f -name '*.tf' -exec sha256sum {{}} + | sha256sum | cut -c1-8", shell=True).decode().strip()
-
-    new_version = f"v{major}.{minor}.{patch}-"
-
-    print(f"New version determined: {new_version}")
+    new_version = f"v{major}.{minor}.{patch}"
     
-    # Update to use GITHUB_OUTPUT environment file
-    with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as f:
-        f.write(f"new_version={new_version}\n")
+    # Set GitHub Actions output
+    set_output('version', new_version)
     
     # Set environment variable
-    with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as f:
-        f.write(f"NEW_VERSION={new_version}\n")
+    set_env('NEW_VERSION', new_version)
+    
+    # Print to stdout for logging purposes
+    print(f"New version determined: {new_version}")
 
 if __name__ == "__main__":
     main()
