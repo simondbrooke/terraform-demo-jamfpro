@@ -122,9 +122,6 @@ jobs:
       debug: ${{ github.event.inputs.debug == 'true' }}
       config_directory: "workload/terraform/jamfpro"
       new_version: ${{ needs.create-version-and-release.outputs.new_version }}
-    secrets:
-      TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
-
 
   send-notification:
     needs: [create-version-and-release, terraform-plan]
