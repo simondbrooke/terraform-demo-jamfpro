@@ -44,20 +44,13 @@ jobs:
           ref: release-${{ inputs.new_version }}
           fetch-depth: 0
       
-      # - name: Set Terraform workspace
-      #   if: ${{ inputs.debug }}
-      #   id: set_workspace
-      #   run: |
-      #     if [[ "${{ inputs.target_environment }}" == "production" ]]; then
-      #       echo "TF_WORKSPACE=terraform-jamfpro-production" >> $GITHUB_ENV
-      #     else
-      #       echo "TF_WORKSPACE=terraform-jamfpro-staging" >> $GITHUB_ENV
-      #     fi
+      - name: Set TF_API_TOKEN as environment variable
+        run: echo "TF_API_TOKEN=${{ secrets.TF_API_TOKEN }}" >> $GITHUB_ENV
       
       - name: Verify Terraform Cloud API Token
         if: ${{ inputs.debug }}
         run: |
-          if [ -z "${{ secrets.TF_API_TOKEN }}" ]; then
+          if [ -z "$TF_API_TOKEN" ]; then
             echo "Error: TF_API_TOKEN is not set"
             exit 1
           else
