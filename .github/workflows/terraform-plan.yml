@@ -19,8 +19,6 @@ on:
     secrets:
       TF_API_TOKEN:
         required: true
-      GITHUB_TOKEN:
-        required: true
 
 env:
   TF_CLOUD_ORGANIZATION: "deploymenttheory"
