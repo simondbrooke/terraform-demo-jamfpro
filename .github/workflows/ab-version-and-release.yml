@@ -213,7 +213,6 @@ jobs:
             \`\`\`
             Workspace: ${{ env.TF_WORKSPACE }}
             \`\`\`
-
             [View Full Terraform Cloud Plan](${{ steps.plan-run.outputs.run_link }})
             `;
 
