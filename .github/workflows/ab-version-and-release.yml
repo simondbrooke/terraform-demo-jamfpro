@@ -62,7 +62,12 @@ jobs:
       - name: Determine version and generate hash
         id: determine_version
         run: |
-          python workload/scripts/version_determinator.py
+          NEW_VERSION=$(python workload/scripts/version_determinator.py)
+          CONFIG_HASH=$(python workload/scripts/hash_generator.py "${{ env.CONFIG_DIRECTORY }}")
+          echo "NEW_VERSION=${NEW_VERSION}" >> $GITHUB_ENV
+          echo "CONFIG_HASH=${CONFIG_HASH}" >> $GITHUB_ENV
+          echo "new_version=${NEW_VERSION}-${CONFIG_HASH}" >> $GITHUB_OUTPUT
+          echo "config_hash=${CONFIG_HASH}" >> $GITHUB_OUTPUT
         env:
           CONFIG_DIRECTORY: ${{ env.CONFIG_DIRECTORY }}
 
@@ -198,6 +203,8 @@ jobs:
             ### Summary:
             \`\`\`
             Plan: ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy.
+            \`\`\`
+            Workspace: ${{ env.TF_WORKSPACE }}
             \`\`\`
 
             [View Full Terraform Cloud Plan](${{ steps.plan-run.outputs.run_link }})
