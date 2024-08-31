@@ -46,7 +46,8 @@ jobs:
     needs: validate-inputs
     runs-on: ubuntu-latest
     outputs:
-      new_version: ${{ steps.determine_version.outputs.new_version }}
+      new_version: ${{ steps.combine_version_hash.outputs.new_version }}
+      config_hash: ${{ steps.generate_hash.outputs.config_hash }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.1.7
@@ -59,19 +60,24 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Determine version and generate hash
+      - name: Determine version
         id: determine_version
+        run: echo "version=$(python workload/scripts/version_determinator.py)" >> $GITHUB_OUTPUT
+
+      - name: Generate hash
+        id: generate_hash
+        run: echo "config_hash=$(python workload/scripts/hash_generator.py '${{ env.CONFIG_DIRECTORY }}')" >> $GITHUB_OUTPUT
+
+      - name: Combine version and hash
+        id: combine_version_hash
         run: |
-          NEW_VERSION=$(python workload/scripts/version_determinator.py)
-          CONFIG_HASH=$(python workload/scripts/hash_generator.py "${{ env.CONFIG_DIRECTORY }}")
+          NEW_VERSION="${{ steps.determine_version.outputs.version }}-${{ steps.generate_hash.outputs.config_hash }}"
+          echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
           echo "NEW_VERSION=${NEW_VERSION}" >> $GITHUB_ENV
-          echo "CONFIG_HASH=${CONFIG_HASH}" >> $GITHUB_ENV
-          echo "new_version=${NEW_VERSION}-${CONFIG_HASH}" >> $GITHUB_OUTPUT
-          echo "config_hash=${CONFIG_HASH}" >> $GITHUB_OUTPUT
-        env:
-          CONFIG_DIRECTORY: ${{ env.CONFIG_DIRECTORY }}
+          echo "CONFIG_HASH=${{ steps.generate_hash.outputs.config_hash }}" >> $GITHUB_ENV
 
       - name: Display new release version
+        if: ${{ github.event.inputs.debug == 'true' }}
         run: |
           echo "New version: ${{ env.NEW_VERSION }}"
 
