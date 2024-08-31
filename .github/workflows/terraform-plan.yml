@@ -3,6 +3,12 @@ name: Terraform Plan
 on:
   workflow_call:
     inputs:
+      tf_cloud_organization:
+        required: true
+        type: string
+      tf_workspace:
+        required: true
+        type: string
       target_environment:
         required: true
         type: string
@@ -21,8 +27,9 @@ on:
         required: true
 
 env:
-  TF_CLOUD_ORGANIZATION: "deploymenttheory"
   CONFIG_DIRECTORY: ${{ inputs.config_directory }}
+  TF_CLOUD_ORGANIZATION: ${{ inputs.tf_cloud_organization }}
+  TF_WORKSPACE: ${{ inputs.tf_workspace }}
 
 jobs:
   terraform-plan:
@@ -37,15 +44,15 @@ jobs:
           ref: release-${{ inputs.new_version }}
           fetch-depth: 0
       
-      - name: Set Terraform workspace
-        if: ${{ inputs.debug }}
-        id: set_workspace
-        run: |
-          if [[ "${{ inputs.target_environment }}" == "production" ]]; then
-            echo "TF_WORKSPACE=terraform-jamfpro-production" >> $GITHUB_ENV
-          else
-            echo "TF_WORKSPACE=terraform-jamfpro-staging" >> $GITHUB_ENV
-          fi
+      # - name: Set Terraform workspace
+      #   if: ${{ inputs.debug }}
+      #   id: set_workspace
+      #   run: |
+      #     if [[ "${{ inputs.target_environment }}" == "production" ]]; then
+      #       echo "TF_WORKSPACE=terraform-jamfpro-production" >> $GITHUB_ENV
+      #     else
+      #       echo "TF_WORKSPACE=terraform-jamfpro-staging" >> $GITHUB_ENV
+      #     fi
       
       - name: Verify Terraform Cloud API Token
         if: ${{ inputs.debug }}
