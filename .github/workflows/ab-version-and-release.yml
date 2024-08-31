@@ -60,13 +60,13 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Determine version
+      - name: Determine release version
         id: determine_version
-        run: echo "version=$(python workload/scripts/version_determinator.py)" >> $GITHUB_OUTPUT
+        run: python workload/scripts/version_determinator.py '${{ env.CONFIG_DIRECTORY }}'
 
-      - name: Generate hash
+      - name: Generate release hash
         id: generate_hash
-        run: echo "config_hash=$(python workload/scripts/hash_generator.py '${{ env.CONFIG_DIRECTORY }}')" >> $GITHUB_OUTPUT
+        run: python workload/scripts/hash_generator.py '${{ env.CONFIG_DIRECTORY }}'
 
       - name: Combine version and hash
         id: combine_version_hash

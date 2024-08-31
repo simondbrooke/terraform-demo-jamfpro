@@ -6,10 +6,6 @@ def generate_hash(dir_path):
     """
     Generate a hash based on the contents of all .tf files in the given directory and its subdirectories.
 
-    This function walks through the directory tree, reads all .tf files,
-    and generates a SHA256 hash based on their contents. The files are processed
-    in a sorted order to ensure consistency across different runs.
-
     Args:
         dir_path (str): The path to the directory containing .tf files.
 
@@ -26,12 +22,32 @@ def generate_hash(dir_path):
                         sha256.update(chunk)
     return sha256.hexdigest()[:8]
 
+def set_output(name, value):
+    """
+    Set a GitHub Actions output variable.
+
+    Args:
+        name (str): The name of the output variable.
+        value (str): The value to set.
+    """
+    with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as fh:
+        print(f'{name}={value}', file=fh)
+
+def set_env(name, value):
+    """
+    Set a GitHub Actions environment variable.
+
+    Args:
+        name (str): The name of the environment variable.
+        value (str): The value to set.
+    """
+    with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as fh:
+        print(f'{name}={value}', file=fh)
+
 def main():
     """
-    Main function to handle command-line arguments and generate the configuration hash.
-
-    This function checks for the correct number of command-line arguments,
-    validates the input directory, generates the hash, and prints the result.
+    Main function to handle command-line arguments, generate the configuration hash,
+    and set GitHub Actions outputs and environment variables.
 
     Usage:
         python hash_generator.py <directory>
@@ -41,14 +57,24 @@ def main():
         1: Incorrect number of arguments or invalid directory
     """
     if len(sys.argv) != 2:
+        print("Usage: python hash_generator.py <directory>", file=sys.stderr)
         sys.exit(1)
     
     input_directory = sys.argv[1]
     if not os.path.isdir(input_directory):
+        print(f"Error: {input_directory} is not a valid directory", file=sys.stderr)
         sys.exit(1)
     
     config_hash = generate_hash(input_directory)
-    print(config_hash, end='')
+    
+    # Set GitHub Actions output
+    set_output('config_hash', config_hash)
+    
+    # Set environment variable
+    set_env('CONFIG_HASH', config_hash)
+    
+    # Print to stdout for logging purposes
+    print(f"Generated hash: {config_hash}")
 
 if __name__ == "__main__":
     main()
