@@ -50,8 +50,6 @@ jobs:
       source_environment: ${{ github.event.inputs.source_environment }}
       config_directory: "workload/terraform/jamfpro"
       debug: ${{ github.event.inputs.debug == 'true' }}
-    secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   terraform-plan:
     needs: create-version-and-release
