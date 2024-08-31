@@ -41,16 +41,14 @@ def main():
         1: Incorrect number of arguments or invalid directory
     """
     if len(sys.argv) != 2:
-        print("Usage: python hash_generator.py <directory>")
         sys.exit(1)
     
     input_directory = sys.argv[1]
     if not os.path.isdir(input_directory):
-        print(f"Error: {input_directory} is not a valid directory")
         sys.exit(1)
     
     config_hash = generate_hash(input_directory)
-    print(config_hash)
+    print(config_hash, end='')
 
 if __name__ == "__main__":
     main()

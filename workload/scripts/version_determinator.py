@@ -265,9 +265,9 @@ def main():
     else:
         patch += 1
 
-    config_hash = subprocess.check_output(f"find {config_directory} -type f -name '*.tf' -exec sha256sum {{}} + | sha256sum | cut -c1-8", shell=True).decode().strip()
+    #config_hash = subprocess.check_output(f"find {config_directory} -type f -name '*.tf' -exec sha256sum {{}} + | sha256sum | cut -c1-8", shell=True).decode().strip()
 
-    new_version = f"v{major}.{minor}.{patch}-{config_hash}"
+    new_version = f"v{major}.{minor}.{patch}-"
 
     print(f"New version determined: {new_version}")
     
