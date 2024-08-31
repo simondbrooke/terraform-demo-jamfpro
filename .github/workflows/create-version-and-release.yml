@@ -35,12 +35,12 @@ jobs:
       - name: Determine release version
         id: determine_version
         run: |
-          python $GITHUB_WORKSPACE/scripts/version_determinator.py '${{ inputs.config_directory }}'
+          python $GITHUB_WORKSPACE/workload/scripts/version_determinator.py '${{ inputs.config_directory }}'
 
       - name: Generate release hash
         id: generate_hash
         run: |
-          python $GITHUB_WORKSPACE/scripts/hash_generator.py '${{ inputs.config_directory }}'
+          python $GITHUB_WORKSPACE/workload/scripts/hash_generator.py '${{ inputs.config_directory }}'
 
       - name: Combine version and hash
         id: combine_version_hash
