@@ -107,6 +107,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Create and push release branch
+        id: create_release_branch
+        run: |
+          git checkout -b release-${{ env.NEW_VERSION }}
+          git push origin release-${{ env.NEW_VERSION }}
+
   terraform-plan:
     needs: create-version-and-release
     runs-on: ubuntu-latest
@@ -154,11 +160,6 @@ jobs:
           else
             echo "Workspace $TF_WORKSPACE exists in organization $TF_CLOUD_ORGANIZATION"
           fi
-
-      - name: Create a new branch for the release
-        run: |
-          git checkout -b release-${{ needs.create-version-and-release.outputs.new_version }}
-          git push origin release-${{ needs.create-version-and-release.outputs.new_version }}
 
       - name: Upload Configuration
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.1
