@@ -33,11 +33,22 @@ Before you begin, ensure you have the following prerequisites in place:
 .
 ├── .github
 │   └── workflows
-│       ├── promote-to-sandbox.yml
-│       ├── promote-to-staging.yml
-│       ├── promote-to-production.yml
-│       └── drift-detection-correction.yml
+│       ├── 00-hotfix.yml
+│       ├── 01-terraform-sandbox.yml
+│       ├── 02-release-and-plan-staging.yml
+│       ├── 03-terraform-apply-staging.yml
+│       ├── 04-release-and-plan-production.yml
+│       ├── 05-terraform-apply-production.yml
+│       ├── branch-cleanup.yml
+│       ├── create-version-and-release.yml
+│       ├── lint.yml
+│       ├── send-notification.yml
+│       ├── terraform-apply.yml
+│       └── terraform-plan.yml
 ├── workload
+│   ├── scripts
+│   │   ├── hash_generator.py
+│   │   └── version_determinator.py
 │   └── terraform
 │       └── jamfpro
 │           ├── main.tf
@@ -63,25 +74,168 @@ Each environment has its own Terraform Cloud workspace:
 
 ## Workflow Overview
 
-1. Developers create feature branches prefixed with `feature-`, `bugfix-`, or `release-`.
-2. Changes are first promoted to the Sandbox environment.
-3. After testing in Sandbox, changes can be promoted to Staging via a pull request.
-4. Finally, changes are promoted to Production via another pull request.
+1. Developers create short-lived branches prefixed with `feature-`, `bugfix-`, `hotfix-`, `chore-`, `config-`, `docs-`, or `test-`.
+2. Changes are automatically applied to the Sandbox environment when pushed from these branches to sandbox.
+3. Once all desired changes have been tested and merged into the sandbox branch, the promotion to Staging begins:
+   a. The "02 - release and terraform plan to: staging" workflow is manually triggered from the sandbox branch.
+   b. This workflow creates a new version and a new release branch (e.g., `release-v1.2.3`).
+   c. It then generates a Terraform plan for the Staging environment using this release branch.
+   d. A pull request is created from the release branch to the staging branch, with the plan for review.
+4. After the pull request is reviewed and approved:
+   a. The pull request is merged into the staging branch.
+   b. This triggers the "03 - terraform apply to: staging" workflow.
+   c. The workflow checks that the merge is from a release branch (starting with `release-v`), then applies the Terraform changes to the Staging environment.
+   d. After successful apply, the release branch is cleaned up (deleted).
+5. The process for promoting to Production follows a similar pattern with its own workflows:
+   a. A new release and plan workflow is manually triggered from the staging branch.
+   b. A new release branch is created for production promotion.
+   c. After review and approval, the changes are applied to the Production environment.
+   d. The production release branch is cleaned up after successful apply.
+
+This approach ensures that each promotion to staging or production is associated with a specific release version, allowing for version tracking and potential rollback if needed.
 
 ## Branching Strategy
 
-- `feature-*`: For new features
-- `bugfix-*`: For bug fixes
-- `release-*`: For release preparation
+Our branching strategy consists of long-lived branches, short-lived feature branches, and temporary release branches. Here's a detailed breakdown:
 
-## Getting Started
+| Branch Type | Branch Name | Purpose | Lifecycle |
+|-------------|-------------|---------|-----------|
+| Long-lived  | `sandbox`   | Represents the sandbox environment. All feature branches are merged here first. | Permanent |
+| Long-lived  | `staging`   | Represents the staging environment. Release branches are merged here for testing before production. | Permanent |
+| Long-lived  | `production` | Represents the production environment. Final destination for all changes. | Permanent |
+| Short-lived | `feature-*`  | For developing new features | Merged to `sandbox` when complete, then manually deleted |
+| Short-lived | `bugfix-*`   | For fixing bugs | Merged to `sandbox` when complete, then manually deleted |
+| Short-lived | `hotfix-*`   | For critical fixes that need to be deployed quickly | Can be merged directly to `production` in emergencies, then is backported to `staging` |
+| Short-lived | `chore-*`    | For maintenance tasks | Merged to `sandbox` when complete, then manually deleted |
+| Short-lived | `config-*`   | For configuration changes | Merged to `sandbox` when complete, then manually deleted |
+| Short-lived | `docs-*`     | For documentation updates | Merged to `sandbox` when complete, then manually deleted |
+| Short-lived | `test-*`     | For adding or updating tests | Merged to `sandbox` when complete, then manually deleted |
+| Temporary   | `release-v*` | Created for each release to staging or production | Created during release process, used for final review and applying changes, then deleted after successful apply |
 
-1. **Fork or Clone Repository**: Start by forking or cloning this repository to your GitHub account.
+### Branch Flow
 
-2. **Configure Github Secrets**: Set up the following secrets in your GitHub repository settings:
-    - `TF_API_TOKEN`: Your Terraform Cloud API token for Terraform Cloud backend.
+```shell
+Time ----->
 
-3. **Configure Terraform Cloud Secrets**: Set up the following secrets in your Terraform Cloud workspace variable settings for each environment (Sandbox, Staging, Production):
+ feature-*   
+ bugfix-*     
+ hotfix-*        release-v1.0.0            release-v1.1.0
+ chore-*         (sandbox to staging)      (staging to production)
+ config-*              |                          |
+ docs-*                |                          |
+ test-*                |                          |
+   |                   |                          |
+   |                   |                          |
+   v                   v                          v
++--------+        +--------+                 +--------+
+|        |        |        |                 |        |
+| Sandbox|------->| Sandbox|---------------->| Sandbox|  (Default branch)
+|        |        |        |                 |        |
++--------+        +--------+                 +--------+
+     ^                 | PR                       | PR
+     |                 |                          |
+     |                 +                          +
+     |            +--------+                 +--------+ 
+     |            |        |                 |        |
+     +------------| Staging|---------------->| Staging|
+     |            |        |                 |        |
+     |            +--------+                 +--------+
+     |                 ^                          | PR
+     |                 |                          |
+     |                 |                          +
+     |                 |                    +----------+
+     |                 |                    |          |
+     +-----------------+---------------====>|Production|
+                       .                    |          |
+                       .                    +----------+
+                       .
+                       +---> Branch deleted after merge
+
+ Legend:
+ -----> : Git Flow
+ -----+ : Pull Request
+ ====> : Hotfix Flow (when needed)
+ ...   : Branch deletion
+```
+
+### Notes
+
+- Hotfixes may bypass the normal flow in emergencies, but should be backported to ensure all environments stay in sync.
+- Release branches (`release-v*`) are temporary and serve as a stable point for final testing and deployment. They are deleted after successful merge and apply.
+- Long-lived branches (`sandbox`, `staging`, `production`) should never be deleted and represent the state of each environment.
+
+## GitHub Actions Workflows
+
+1. **Terraform Apply to Sandbox** (`01-terraform-sandbox.yml`)
+   - Triggered on push to branches prefixed with `feature-`, `bugfix-`, `hotfix-`, `chore-`, `config-`, `docs-`, or `test-`
+   - Also can be manually triggered with a specified branch name
+   - Applies changes directly to the Sandbox environment using Terraform Cloud
+   - Validates branch name for manual runs
+   - Uses the `terraform-jamfpro-sandbox` workspace in Terraform Cloud
+
+Getting Started
+
+1. **Create a New Repository**: Start by creating a new repository in your GitHub account.
+2. **Clone and Push to Your New Repository**: Clone this template repository and push it to your newly created repository:
+
+```bash
+git clone https://github.com/original-owner/terraform-jamfpro-config-template.git
+cd terraform-jamfpro-config-template
+git remote set-url origin https://github.com/your-username/your-new-repo.git
+git push -u origin main
+```
+
+Replace original-owner with the username of the template repository owner, and your-username and your-new-repo with your GitHub username and the name of your new repository.
+
+3. **Configure Github Secrets**: Set up the following secrets in your GitHub repository settings:
+
+- `TF_API_TOKEN`: Your Terraform Cloud API token for Terraform Cloud backend.
+- `PAT_TOKEN`: Your GitHub Personal Access Token for branch management operations.
+
+To set up the PAT_TOKEN:
+a. Go to your GitHub Settings > Developer settings > Personal access tokens > Fine-grained tokens.
+b. Click "Generate new token".
+c. Give your token a descriptive name, e.g., "Terraform Jamf Pro Config Branch Management".
+d. Set the expiration as per your security policies.
+e. Under "Repository access", select "Only select repositories" and choose the repository you're setting up.
+f. Under "Permissions", grant the following permissions:
+- Repository permissions:
+- Contents: Read and write (This allows branch management)
+- Metadata: Read-only (This is required for API operations)
+- Organization permissions:
+- Members: Read-only (If working within an organization)
+g. Click "Generate token" and copy the token immediately.
+h. In your repository, go to Settings > Secrets and variables > Actions.
+i. Click "New repository secret", name it PAT_TOKEN, and paste your token as the value.
+
+Optional:
+
+- `MSTEAMS_WEBHOOK_URL`: Your Microsoft Teams webhook URL for sending notifications.
+- `SLACK_WEBHOOK_URL`: Your Slack webhook URL for sending notifications.
+
+To set up the notification webhooks:
+
+a. For Microsoft Teams:
+
+- In your Teams channel, click the '...' next to the channel name and select 'Connectors'.
+- Find 'Incoming Webhook' and click 'Configure'.
+- Provide a name for your webhook and optionally upload an image.
+- Click 'Create' and copy the webhook URL provided.
+- In your GitHub repository, go to Settings > Secrets and variables > Actions.
+- Click "New repository secret", name it MSTEAMS_WEBHOOK_URL, and paste the webhook URL as the value.
+
+b. For Slack:
+
+- Go to your Slack workspace's App Directory and create a new app (or use an existing one).
+- Under 'Features', select 'Incoming Webhooks' and activate them.
+- Click 'Add New Webhook to Workspace' and select the channel for notifications.
+- Copy the webhook URL provided.
+- In your GitHub repository, go to Settings > Secrets and variables > Actions.
+- Click "New repository secret", name it SLACK_WEBHOOK_URL, and paste the webhook URL as the value.
+
+These webhook URLs are used in the Send Notification workflow (send-notification.yml) to send deployment status updates to your team. The workflow determines which service to use based on the notification_channel input. Here's a snippet of how it's used:
+
+4. **Configure Terraform Cloud Secrets**: Set up the following secrets in your Terraform Cloud workspace variable settings for each environment (Sandbox, Staging, Production):
     - `JAMFPRO_INSTANCE_FQDN`: Your Jamf Pro instance URL. For example: `https://your-instance.jamfcloud.com`.
     - `JAMFPRO_AUTH_METHOD`: Can be either `basic` or `oauth2`.
     - `JAMFPRO_CLIENT_ID`: Your Jamf Pro client id when `JAMFPRO_AUTH_METHOD` is set to 'oauth2'.
@@ -118,14 +272,14 @@ Each environment has its own Terraform Cloud workspace:
    In your main Terraform configuration file (e.g., `main.tf`):
 
    ```hcl
-   terraform {
-     cloud {
-       organization = "deploymenttheory"
-       workspaces {
-         tags = ["jamfpro"]
-       }
-     }
-   }
+    terraform {
+      cloud {
+        organization = "deploymenttheory"
+        workspaces {
+          tags = ["Jamf Pro"]
+        }
+      }
+    }
    ```
 
    This configuration tells Terraform to use Terraform Cloud with the "deploymenttheory" organization and to work with any workspace tagged with "jamfpro".
@@ -158,7 +312,7 @@ Each environment has its own Terraform Cloud workspace:
      required_providers {
        jamfpro = {
          source  = "deploymenttheory/jamfpro"
-         version = "0.1.11"
+         version = "0.1.12"
        }
      }
    }
@@ -166,31 +320,22 @@ Each environment has its own Terraform Cloud workspace:
 
 7. **Define Your Resources**: Use Terraform resource definitions to manage your Jamf Pro resources.
 
-8. **Create a New Branch**: Create a new branch with the appropriate prefix (`feature-`, `bugfix-`, or `release-`).
+8. **Create a New Branch**: Create a new branch with the appropriate prefix eg. (`feature-`, `bugfix-`, or `chore-`).
 
 9. **Make Changes and Push**: Make your changes and push to GitHub.
 
-10. **Promote to Sandbox**: The "Promote to Sandbox" workflow will automatically run.
+10. **Test in Sandbox**: The `01 - terraform testing: sandbox` workflow will automatically run.
 
-11. **Promote to Staging**: After testing in Sandbox, create a pull request to merge into the `staging` branch.
+11. **Promote to Sandbox**: After testing in Sandbox, create a pull request to merge all chanages from your short lived branch into the `sandbox` branch.
 
-12. **Promote to Production**: Once approved and merged to staging, create another pull request to merge `staging` into `production`.
+12. **Promote to Staging**: Now manually trigger the `02-release-and-plan-staging.yml` workflow and approve the pull request to merge the release branch into the `staging` branch after change review.
 
-## GitHub Actions Workflows
+13. **Apply to Staging**: After the pull request is merged, the `03-terraform-apply-staging.yml` workflow will automatically run to apply the changes to the Staging environment.
 
-1. **Promote to Sandbox** (`promote-to-sandbox.yml`)
-   - Triggered on push to branches prefixed with `feature-`, `bugfix-`, or `release-`
-   - Applies changes to the Sandbox environment
+14. **Promote to Production**: Repeat the process for promoting to Production by manually triggering the `04-release-and-plan-production.yml` workflow and approving the pull request to merge the release branch into the `production` branch after change review.
 
-2. **Promote to Staging** (`promote-to-staging.yml`)
-   - Triggered on pull request to the `staging` branch
-   - Plans changes for the Staging environment
-   - Applies changes when the PR is merged
+15. **Apply to Production**: After the pull request is merged, the `05-terraform-apply-production.yml` workflow will automatically run to apply the changes to the Production environment.
 
-3. **Promote to Production** (`promote-to-production.yml`)
-   - Triggered on pull request to the `production` branch
-   - Plans changes for the Production environment
-   - Applies changes when the PR is merged
 
 ## Drift Detection and Correction
 
