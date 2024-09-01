@@ -27,6 +27,7 @@ jobs:
     uses: ./.github/workflows/create-version-and-release.yml
     with:
       source_environment: "staging"
+      target_environment: "production"
       config_directory: "workload/terraform/jamfpro"
       debug: ${{ inputs.debug }}
 

@@ -42,15 +42,14 @@ resource "jamfpro_script" "jamfpro_script_002" {
 #   value = data.jamfpro_script.jamfpro_script_002_data.name
 # }
 
-# resource "jamfpro_script" "jamfpro_script_003" {
-#   name            = "tf-ghatest-reset-safari-v2.1.4"
-#   script_contents = file("${path.module}/support_files/scripts/Reset Safari.sh")
-#   os_requirements = "13"
-#   priority        = "BEFORE"
-#   info            = "Deleting Safari preference files to reset to system default."
-#   notes           = "Jamf Pro script parameters: none"
-
-# }
+resource "jamfpro_script" "jamfpro_script_003" {
+  name            = "tf-ghatest-reset-safari-v2.1.4"
+  script_contents = file("${path.module}/support_files/scripts/Reset Safari.sh")
+  os_requirements = "13"
+  priority        = "BEFORE"
+  info            = "Deleting Safari preference files to reset to system default."
+  notes           = "Jamf Pro script parameters: none"
+}
 
 # data "jamfpro_script" "jamfpro_script_003_data" {
 #   id = jamfpro_script.jamfpro_script_003.id
