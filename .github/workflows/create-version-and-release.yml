@@ -12,12 +12,6 @@ on:
       config_directory:
         required: true
         type: string
-      tf_workspace:
-        required: true
-        type: string
-      jira_project:
-        required: false
-        type: string
       debug:
         required: false
         type: boolean
@@ -82,59 +76,13 @@ jobs:
         uses: softprops/action-gh-release@v2.0.8
         with:
           tag_name: ${{ env.NEW_VERSION }}
-          name: Release ${{ env.NEW_VERSION }}
+          name: ${{ env.NEW_VERSION }}
           body: |
-            🚀 This release was manually triggered by @${{ github.actor }} on ${{ github.event.repository.updated_at }}.
-            
+            🚀 This release was manually triggered by @${{ github.actor }}.
             🔄 Source: ${{ inputs.source_environment }}
             🎯 Target: ${{ inputs.target_environment }}
-            🔑 Configuration Hash: `${{ env.CONFIG_HASH }}`
-            
-            💻 Commit: `${{ github.sha }}`
-            
-            📁 Changed files:
-            ```
-            ${{ steps.changed_files.outputs.all_changed_files }}
-            ```
-            
-            ☁️ Terraform Workspace: `${{ inputs.tf_workspace }}`
-            
-            🎟️ JIRA Tickets: ${{ steps.jira_tickets.outputs.ticket_list }}
-            
-            👥 Contributors:
-            ${{ steps.get_contributors.outputs.contributors }}
-            
-            📝 Changelog:
-            ${{ steps.generate_changelog.outputs.changelog }}
-            
-            🏗️ Build Job: ${{ github.run_id }}
-            
-            🔗 Related PRs: ${{ steps.related_prs.outputs.pr_list }}
-            
-            🧪 Test Coverage: ${{ steps.test_coverage.outputs.coverage }}%
-            
-            ⚙️ Configuration:
-            - Environment: ${{ inputs.target_environment }}
-            - Terraform Version: ${{ steps.tf_version.outputs.version }}
-            
-            🔒 Security:
-            - Vulnerabilities fixed: ${{ steps.security_scan.outputs.fixed_vulnerabilities }}
-            - Security advisories: ${{ steps.security_scan.outputs.advisories }}
-            
-            🚦 Status:
-            - CI Status: ${{ job.status }}
-            - Deployment Status: Pending
-            
-            📊 Metrics:
-            - Code additions: +${{ steps.git_diff.outputs.additions }}
-            - Code deletions: -${{ steps.git_diff.outputs.deletions }}
-            
-            🔮 Next Steps:
-            1. Deploy to ${{ inputs.target_environment }}
-            2. Monitor application performance
-            3. Gather user feedback
-            
-            For any issues or questions, please contact the DevOps team.
+            💻 Commit: ${{ github.sha }}
+            🔒 TF Configuration File Hash: ${{ env.CONFIG_HASH }}
           draft: false
           prerelease: false
           files: |

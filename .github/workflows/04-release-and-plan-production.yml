@@ -29,8 +29,6 @@ jobs:
       source_environment: "staging"
       target_environment: "production"
       config_directory: "workload/terraform/jamfpro"
-      tf_workspace: "terraform-jamfpro-production"
-      jira_project: "DEVOPS"
       debug: ${{ inputs.debug }}
 
   terraform-plan:
