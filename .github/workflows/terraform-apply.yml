@@ -97,3 +97,5 @@ jobs:
           echo "Plan Only: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.plan-only }}"
           echo "Has Changes: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.has-changes }}"
           echo "Terraform Version: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.terraform-version }}"
+          echo "Source: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.source }}"
+          echo "Trigger Reason: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.trigger-reason }}"
