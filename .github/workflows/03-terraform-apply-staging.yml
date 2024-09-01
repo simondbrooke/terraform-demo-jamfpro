@@ -13,8 +13,18 @@ permissions:
   id-token: write
 
 jobs:
+  check-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if running on a release branch
+        if: ${{ !startsWith(github.ref, 'refs/heads/release-') }}
+        run: |
+          echo "Error: This workflow can only be run from a release branch (branch name starting with 'release-')."
+          exit 1
+
   terraform-apply:
     uses: ./.github/workflows/terraform-apply.yml
+    needs: check-branch
     with:
       tf_cloud_organization: "deploymenttheory"
       tf_workspace: "terraform-jamfpro-staging"
