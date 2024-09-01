@@ -16,10 +16,10 @@ jobs:
   check-branch:
     runs-on: ubuntu-latest
     steps:
-      - name: Check if running on staging branch
-        if: github.ref != 'refs/heads/staging'
+      - name: Check if running on a release branch
+        if: ${{ !startsWith(github.ref, 'refs/heads/release-') }}
         run: |
-          echo "Error: This workflow can only be run from the staging branch."
+          echo "Error: This workflow can only be run from a release branch (branch name starting with 'release-')."
           exit 1
           
   create-version-and-release:
