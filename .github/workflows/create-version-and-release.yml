@@ -76,7 +76,7 @@ jobs:
         uses: softprops/action-gh-release@v2.0.8
         with:
           tag_name: ${{ env.NEW_VERSION }}
-          name: Release ${{ env.NEW_VERSION }}
+          name: ${{ env.NEW_VERSION }}
           body: |
             🚀 This release was manually triggered by @${{ github.actor }}.
             🔄 Source: ${{ inputs.source_environment }}
