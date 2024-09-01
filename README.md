@@ -102,13 +102,13 @@ Our branching strategy consists of long-lived branches, short-lived feature bran
 | Long-lived  | `sandbox`   | Represents the sandbox environment. All feature branches are merged here first. | Permanent |
 | Long-lived  | `staging`   | Represents the staging environment. Release branches are merged here for testing before production. | Permanent |
 | Long-lived  | `production` | Represents the production environment. Final destination for all changes. | Permanent |
-| Short-lived | `feature-*`  | For developing new features | Merged to `sandbox` when complete, then deleted |
-| Short-lived | `bugfix-*`   | For fixing bugs | Merged to `sandbox` when complete, then deleted |
-| Short-lived | `hotfix-*`   | For critical fixes that need to be deployed quickly | Can be merged directly to `staging` or `production` in emergencies, then backported to `sandbox` |
-| Short-lived | `chore-*`    | For maintenance tasks | Merged to `sandbox` when complete, then deleted |
-| Short-lived | `config-*`   | For configuration changes | Merged to `sandbox` when complete, then deleted |
-| Short-lived | `docs-*`     | For documentation updates | Merged to `sandbox` when complete, then deleted |
-| Short-lived | `test-*`     | For adding or updating tests | Merged to `sandbox` when complete, then deleted |
+| Short-lived | `feature-*`  | For developing new features | Merged to `sandbox` when complete, then manually deleted |
+| Short-lived | `bugfix-*`   | For fixing bugs | Merged to `sandbox` when complete, then manually deleted |
+| Short-lived | `hotfix-*`   | For critical fixes that need to be deployed quickly | Can be merged directly to `production` in emergencies, then is backported to `staging` |
+| Short-lived | `chore-*`    | For maintenance tasks | Merged to `sandbox` when complete, then manually deleted |
+| Short-lived | `config-*`   | For configuration changes | Merged to `sandbox` when complete, then manually deleted |
+| Short-lived | `docs-*`     | For documentation updates | Merged to `sandbox` when complete, then manually deleted |
+| Short-lived | `test-*`     | For adding or updating tests | Merged to `sandbox` when complete, then manually deleted |
 | Temporary   | `release-v*` | Created for each release to staging or production | Created during release process, used for final review and applying changes, then deleted after successful apply |
 
 ### Branch Flow
