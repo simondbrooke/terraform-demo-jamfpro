@@ -49,7 +49,7 @@ jobs:
 
   send-notification:
     needs: [terraform-apply]
-    if: always()
+    if: ${{ always() && needs.terraform-apply.result != 'skipped' }}
     uses: ./.github/workflows/send-notification.yml
     with:
       environment: "production"
