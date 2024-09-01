@@ -16,33 +16,33 @@
 
 
 
-# resource "jamfpro_user_group" "jamfpro_user_group_002" {
-#   name                = "tf-ghatest-usergroup-smart"
-#   is_smart            = true
-#   is_notify_on_change = true
+resource "jamfpro_user_group" "jamfpro_user_group_002" {
+  name                = "tf-ghatest-usergroup-smart"
+  is_smart            = true
+  is_notify_on_change = true
 
-#   # site {
-#   #   id   = -1
-#   #   name = "None"
-#   # }
+  site {
+    id   = -1
+    name = "None"
+  }
 
-#   criteria {
-#     name          = "Email Address"
-#     priority      = 0
-#     and_or        = "and"
-#     search_type   = "like"
-#     value         = "company.com"
-#     opening_paren = false
-#     closing_paren = false
-#   }
-#   criteria {
-#     name          = "Managed Apple ID"
-#     priority      = 1
-#     and_or        = "and"
-#     search_type   = "like"
-#     value         = "company.com"
-#     opening_paren = false
-#     closing_paren = false
-#   }
-# }
+  criteria {
+    name          = "Email Address"
+    priority      = 0
+    and_or        = "and"
+    search_type   = "like"
+    value         = "company.com"
+    opening_paren = false
+    closing_paren = false
+  }
+  criteria {
+    name          = "Managed Apple ID"
+    priority      = 1
+    and_or        = "and"
+    search_type   = "like"
+    value         = "company.com"
+    opening_paren = false
+    closing_paren = false
+  }
+}
 
