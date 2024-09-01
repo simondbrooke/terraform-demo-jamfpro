@@ -6,8 +6,17 @@ on:
       source_environment:
         required: true
         type: string
+      target_environment:
+        required: true
+        type: string
       config_directory:
         required: true
+        type: string
+      tf_workspace:
+        required: true
+        type: string
+      jira_project:
+        required: false
         type: string
       debug:
         required: false
