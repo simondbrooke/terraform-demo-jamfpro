@@ -1,4 +1,4 @@
-name: "03 - terraform apply: staging"
+name: "03 - terraform apply to: staging"
 
 on:
   pull_request:
@@ -13,8 +13,22 @@ permissions:
   id-token: write
 
 jobs:
+  check-branch:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check if merging from a release branch
+      uses: actions/github-script@v7.0.1
+      with:
+        script: |
+          const sourceBranch = context.payload.pull_request.head.ref;
+          console.log(`Source branch: ${sourceBranch}`);
+          if (!sourceBranch.startsWith('release-v')) {
+            core.setFailed('This workflow can only be run when merging from a release branch (branch name starting with "release-v").');
+          }
+
   terraform-apply:
     uses: ./.github/workflows/terraform-apply.yml
+    needs: check-branch
     with:
       tf_cloud_organization: "deploymenttheory"
       tf_workspace: "terraform-jamfpro-staging"

@@ -1,4 +1,4 @@
-name: "02 - release and terraform plan: staging"
+name: "02 - release and terraform plan to: staging"
 
 on:
   workflow_dispatch:
@@ -23,6 +23,7 @@ jobs:
           exit 1
           
   create-version-and-release:
+    needs: check-branch
     uses: ./.github/workflows/create-version-and-release.yml
     with:
       source_environment: "sandbox"

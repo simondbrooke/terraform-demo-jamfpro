@@ -1,4 +1,4 @@
-name: "04 - release and terraform plan: production"
+name: "04 - release and terraform plan to: production"
 
 on:
   workflow_dispatch:
@@ -12,16 +12,7 @@ on:
 env:
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
 
-jobs:
-  check-branch:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check if running on a release branch
-        if: ${{ !startsWith(github.ref, 'refs/heads/release-') }}
-        run: |
-          echo "Error: This workflow can only be run from a release branch (branch name starting with 'release-')."
-          exit 1
-          
+jobs:     
   create-version-and-release:
     uses: ./.github/workflows/create-version-and-release.yml
     with:
