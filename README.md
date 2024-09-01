@@ -113,6 +113,7 @@ Our branching strategy consists of long-lived branches, short-lived feature bran
 
 ### Branch Flow
 
+```shell
 Time ----->
 
  feature-*   
@@ -154,6 +155,7 @@ Time ----->
  -----+ : Pull Request
  ====> : Hotfix Flow (when needed)
  ...   : Branch deletion
+```
 
 ### Notes
 
