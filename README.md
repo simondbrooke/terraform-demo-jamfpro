@@ -33,6 +33,7 @@ Before you begin, ensure you have the following prerequisites in place:
 .
 ├── .github
 │   └── workflows
+│       ├── 00-hotfix.yml
 │       ├── 01-terraform-sandbox.yml
 │       ├── 02-release-and-plan-staging.yml
 │       ├── 03-terraform-apply-staging.yml
