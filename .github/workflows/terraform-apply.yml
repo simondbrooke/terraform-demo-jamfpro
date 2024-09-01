@@ -88,3 +88,12 @@ jobs:
         run: |
           echo "Apply Run ID: ${{ steps.apply-run.outputs.run_id }}"
           echo "Apply Status: ${{ steps.apply.outcome }}"
+          echo "Configuration Version: ${{ fromJSON(steps.apply-run.outputs.payload).data.relationships.configuration-version.data.id }}"
+          echo "Workspace ID: ${{ fromJSON(steps.apply-run.outputs.payload).data.relationships.workspace.data.id }}"
+          echo "Created At: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.created-at }}"
+          echo "Status: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.status }}"
+          echo "Is Confirmable: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable }}"
+          echo "Is Cancelable: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsCancelable }}"
+          echo "Plan Only: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.plan-only }}"
+          echo "Has Changes: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.has-changes }}"
+          echo "Terraform Version: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.terraform-version }}"
