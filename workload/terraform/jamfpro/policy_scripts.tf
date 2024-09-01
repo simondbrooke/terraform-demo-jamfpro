@@ -48,7 +48,6 @@ resource "jamfpro_policy" "jamfpro_policy_script_001" {
       parameter9  = ""
       parameter10 = ""
       parameter11 = ""
-      parameter12 = ""
 
     }
   }
