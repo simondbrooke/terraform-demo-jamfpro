@@ -33,11 +33,21 @@ Before you begin, ensure you have the following prerequisites in place:
 .
 ├── .github
 │   └── workflows
-│       ├── promote-to-sandbox.yml
-│       ├── promote-to-staging.yml
-│       ├── promote-to-production.yml
-│       └── drift-detection-correction.yml
+│       ├── 01-terraform-sandbox.yml
+│       ├── 02-release-and-plan-staging.yml
+│       ├── 03-terraform-apply-staging.yml
+│       ├── 04-release-and-plan-production.yml
+│       ├── 05-terraform-apply-production.yml
+│       ├── branch-cleanup.yml
+│       ├── create-version-and-release.yml
+│       ├── lint.yml
+│       ├── send-notification.yml
+│       ├── terraform-apply.yml
+│       └── terraform-plan.yml
 ├── workload
+│   ├── scripts
+│   │   ├── hash_generator.py
+│   │   └── version_determinator.py
 │   └── terraform
 │       └── jamfpro
 │           ├── main.tf
@@ -63,16 +73,102 @@ Each environment has its own Terraform Cloud workspace:
 
 ## Workflow Overview
 
-1. Developers create feature branches prefixed with `feature-`, `bugfix-`, or `release-`.
-2. Changes are first promoted to the Sandbox environment.
-3. After testing in Sandbox, changes can be promoted to Staging via a pull request.
-4. Finally, changes are promoted to Production via another pull request.
+1. Developers create short-lived branches prefixed with `feature-`, `bugfix-`, `hotfix-`, `chore-`, `config-`, `docs-`, or `test-`.
+2. Changes are automatically applied to the Sandbox environment when pushed from these branches to sandbox.
+3. Once all desired changes have been tested and merged into the sandbox branch, the promotion to Staging begins:
+   a. The "02 - release and terraform plan to: staging" workflow is manually triggered from the sandbox branch.
+   b. This workflow creates a new version and a new release branch (e.g., `release-v1.2.3`).
+   c. It then generates a Terraform plan for the Staging environment using this release branch.
+   d. A pull request is created from the release branch to the staging branch, with the plan for review.
+4. After the pull request is reviewed and approved:
+   a. The pull request is merged into the staging branch.
+   b. This triggers the "03 - terraform apply to: staging" workflow.
+   c. The workflow checks that the merge is from a release branch (starting with `release-v`), then applies the Terraform changes to the Staging environment.
+   d. After successful apply, the release branch is cleaned up (deleted).
+5. The process for promoting to Production follows a similar pattern with its own workflows:
+   a. A new release and plan workflow is manually triggered from the staging branch.
+   b. A new release branch is created for production promotion.
+   c. After review and approval, the changes are applied to the Production environment.
+   d. The production release branch is cleaned up after successful apply.
+
+This approach ensures that each promotion to staging or production is associated with a specific release version, allowing for version tracking and potential rollback if needed.
 
 ## Branching Strategy
 
-- `feature-*`: For new features
-- `bugfix-*`: For bug fixes
-- `release-*`: For release preparation
+Our branching strategy consists of long-lived branches, short-lived feature branches, and temporary release branches. Here's a detailed breakdown:
+
+| Branch Type | Branch Name | Purpose | Lifecycle |
+|-------------|-------------|---------|-----------|
+| Long-lived  | `sandbox`   | Represents the sandbox environment. All feature branches are merged here first. | Permanent |
+| Long-lived  | `staging`   | Represents the staging environment. Release branches are merged here for testing before production. | Permanent |
+| Long-lived  | `production` | Represents the production environment. Final destination for all changes. | Permanent |
+| Short-lived | `feature-*`  | For developing new features | Merged to `sandbox` when complete, then deleted |
+| Short-lived | `bugfix-*`   | For fixing bugs | Merged to `sandbox` when complete, then deleted |
+| Short-lived | `hotfix-*`   | For critical fixes that need to be deployed quickly | Can be merged directly to `staging` or `production` in emergencies, then backported to `sandbox` |
+| Short-lived | `chore-*`    | For maintenance tasks | Merged to `sandbox` when complete, then deleted |
+| Short-lived | `config-*`   | For configuration changes | Merged to `sandbox` when complete, then deleted |
+| Short-lived | `docs-*`     | For documentation updates | Merged to `sandbox` when complete, then deleted |
+| Short-lived | `test-*`     | For adding or updating tests | Merged to `sandbox` when complete, then deleted |
+| Temporary   | `release-v*` | Created for each release to staging or production | Created during release process, used for final review and applying changes, then deleted after successful apply |
+
+### Branch Flow
+
+Time ----->
+
+ feature-*   
+ bugfix-*     
+ hotfix-*        release-v1.0.0            release-v1.1.0
+ chore-*         (sandbox to staging)      (staging to production)
+ config-*              |                          |
+ docs-*                |                          |
+ test-*                |                          |
+   |                   |                          |
+   |                   |                          |
+   v                   v                          v
++--------+        +--------+                 +--------+
+|        |        |        |                 |        |
+| Sandbox|------->| Sandbox|---------------->| Sandbox|  (Default branch)
+|        |        |        |                 |        |
++--------+        +--------+                 +--------+
+     ^                | PR                       | PR
+     |                |                          |
+     |                v                          |
+     |            +--------+                 +--------+ 
+     |            |        |                 |        |
+     +------------| Staging|---------------->| Staging|
+     |            |        |                 |        |
+     |            +--------+                 +--------+
+     |                 ^                         | PR
+     |                 |                         |
+     |                 |                         v
+     |                 |                    +----------+
+     |                 |                    |          |
+     +-----------------+----------------====|Production|
+                       |                    |          |
+                       |                    +----------+
+                       |
+                       +---> Branch deleted after merge
+
+ Legend:
+ -----> : Git Flow
+ -----+ : Pull Request
+ ====> : Hotfix Flow (when needed)
+ ...   : Branch deletion
+
+### Notes
+
+- Hotfixes may bypass the normal flow in emergencies, but should be backported to ensure all environments stay in sync.
+- Release branches (`release-v*`) are temporary and serve as a stable point for final testing and deployment. They are deleted after successful merge and apply.
+- Long-lived branches (`sandbox`, `staging`, `production`) should never be deleted and represent the state of each environment.
+
+## GitHub Actions Workflows
+
+1. **Terraform Apply to Sandbox** (`01-terraform-sandbox.yml`)
+   - Triggered on push to branches prefixed with `feature-`, `bugfix-`, `hotfix-`, `chore-`, `config-`, `docs-`, or `test-`
+   - Also can be manually triggered with a specified branch name
+   - Applies changes directly to the Sandbox environment using Terraform Cloud
+   - Validates branch name for manual runs
+   - Uses the `terraform-jamfpro-sandbox` workspace in Terraform Cloud
 
 ## Getting Started
 
@@ -118,14 +214,14 @@ Each environment has its own Terraform Cloud workspace:
    In your main Terraform configuration file (e.g., `main.tf`):
 
    ```hcl
-   terraform {
-     cloud {
-       organization = "deploymenttheory"
-       workspaces {
-         tags = ["jamfpro"]
-       }
-     }
-   }
+    terraform {
+      cloud {
+        organization = "deploymenttheory"
+        workspaces {
+          tags = ["Jamf Pro"]
+        }
+      }
+    }
    ```
 
    This configuration tells Terraform to use Terraform Cloud with the "deploymenttheory" organization and to work with any workspace tagged with "jamfpro".
