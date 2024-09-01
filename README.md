@@ -113,6 +113,7 @@ Our branching strategy consists of long-lived branches, short-lived feature bran
 
 ### Branch Flow
 
+```shell
 Time ----->
 
  feature-*   
@@ -154,6 +155,7 @@ Time ----->
  -----+ : Pull Request
  ====> : Hotfix Flow (when needed)
  ...   : Branch deletion
+```
 
 ### Notes
 
@@ -170,14 +172,69 @@ Time ----->
    - Validates branch name for manual runs
    - Uses the `terraform-jamfpro-sandbox` workspace in Terraform Cloud
 
-## Getting Started
+Getting Started
 
-1. **Fork or Clone Repository**: Start by forking or cloning this repository to your GitHub account.
+1. **Create a New Repository**: Start by creating a new repository in your GitHub account.
+2. **Clone and Push to Your New Repository**: Clone this template repository and push it to your newly created repository:
 
-2. **Configure Github Secrets**: Set up the following secrets in your GitHub repository settings:
-    - `TF_API_TOKEN`: Your Terraform Cloud API token for Terraform Cloud backend.
+```bash
+git clone https://github.com/original-owner/terraform-jamfpro-config-template.git
+cd terraform-jamfpro-config-template
+git remote set-url origin https://github.com/your-username/your-new-repo.git
+git push -u origin main
+```
 
-3. **Configure Terraform Cloud Secrets**: Set up the following secrets in your Terraform Cloud workspace variable settings for each environment (Sandbox, Staging, Production):
+Replace original-owner with the username of the template repository owner, and your-username and your-new-repo with your GitHub username and the name of your new repository.
+
+3. **Configure Github Secrets**: Set up the following secrets in your GitHub repository settings:
+
+- `TF_API_TOKEN`: Your Terraform Cloud API token for Terraform Cloud backend.
+- `PAT_TOKEN`: Your GitHub Personal Access Token for branch management operations.
+
+To set up the PAT_TOKEN:
+a. Go to your GitHub Settings > Developer settings > Personal access tokens > Fine-grained tokens.
+b. Click "Generate new token".
+c. Give your token a descriptive name, e.g., "Terraform Jamf Pro Config Branch Management".
+d. Set the expiration as per your security policies.
+e. Under "Repository access", select "Only select repositories" and choose the repository you're setting up.
+f. Under "Permissions", grant the following permissions:
+- Repository permissions:
+- Contents: Read and write (This allows branch management)
+- Metadata: Read-only (This is required for API operations)
+- Organization permissions:
+- Members: Read-only (If working within an organization)
+g. Click "Generate token" and copy the token immediately.
+h. In your repository, go to Settings > Secrets and variables > Actions.
+i. Click "New repository secret", name it PAT_TOKEN, and paste your token as the value.
+
+Optional:
+
+- `MSTEAMS_WEBHOOK_URL`: Your Microsoft Teams webhook URL for sending notifications.
+- `SLACK_WEBHOOK_URL`: Your Slack webhook URL for sending notifications.
+
+To set up the notification webhooks:
+
+a. For Microsoft Teams:
+
+- In your Teams channel, click the '...' next to the channel name and select 'Connectors'.
+- Find 'Incoming Webhook' and click 'Configure'.
+- Provide a name for your webhook and optionally upload an image.
+- Click 'Create' and copy the webhook URL provided.
+- In your GitHub repository, go to Settings > Secrets and variables > Actions.
+- Click "New repository secret", name it MSTEAMS_WEBHOOK_URL, and paste the webhook URL as the value.
+
+b. For Slack:
+
+- Go to your Slack workspace's App Directory and create a new app (or use an existing one).
+- Under 'Features', select 'Incoming Webhooks' and activate them.
+- Click 'Add New Webhook to Workspace' and select the channel for notifications.
+- Copy the webhook URL provided.
+- In your GitHub repository, go to Settings > Secrets and variables > Actions.
+- Click "New repository secret", name it SLACK_WEBHOOK_URL, and paste the webhook URL as the value.
+
+These webhook URLs are used in the Send Notification workflow (send-notification.yml) to send deployment status updates to your team. The workflow determines which service to use based on the notification_channel input. Here's a snippet of how it's used:
+
+4. **Configure Terraform Cloud Secrets**: Set up the following secrets in your Terraform Cloud workspace variable settings for each environment (Sandbox, Staging, Production):
     - `JAMFPRO_INSTANCE_FQDN`: Your Jamf Pro instance URL. For example: `https://your-instance.jamfcloud.com`.
     - `JAMFPRO_AUTH_METHOD`: Can be either `basic` or `oauth2`.
     - `JAMFPRO_CLIENT_ID`: Your Jamf Pro client id when `JAMFPRO_AUTH_METHOD` is set to 'oauth2'.
@@ -254,7 +311,7 @@ Time ----->
      required_providers {
        jamfpro = {
          source  = "deploymenttheory/jamfpro"
-         version = "0.1.11"
+         version = "0.1.12"
        }
      }
    }
@@ -262,31 +319,22 @@ Time ----->
 
 7. **Define Your Resources**: Use Terraform resource definitions to manage your Jamf Pro resources.
 
-8. **Create a New Branch**: Create a new branch with the appropriate prefix (`feature-`, `bugfix-`, or `release-`).
+8. **Create a New Branch**: Create a new branch with the appropriate prefix eg. (`feature-`, `bugfix-`, or `chore-`).
 
 9. **Make Changes and Push**: Make your changes and push to GitHub.
 
-10. **Promote to Sandbox**: The "Promote to Sandbox" workflow will automatically run.
+10. **Test in Sandbox**: The `01 - terraform testing: sandbox` workflow will automatically run.
 
-11. **Promote to Staging**: After testing in Sandbox, create a pull request to merge into the `staging` branch.
+11. **Promote to Sandbox**: After testing in Sandbox, create a pull request to merge all chanages from your short lived branch into the `sandbox` branch.
 
-12. **Promote to Production**: Once approved and merged to staging, create another pull request to merge `staging` into `production`.
+12. **Promote to Staging**: Now manually trigger the `02-release-and-plan-staging.yml` workflow and approve the pull request to merge the release branch into the `staging` branch after change review.
 
-## GitHub Actions Workflows
+13. **Apply to Staging**: After the pull request is merged, the `03-terraform-apply-staging.yml` workflow will automatically run to apply the changes to the Staging environment.
 
-1. **Promote to Sandbox** (`promote-to-sandbox.yml`)
-   - Triggered on push to branches prefixed with `feature-`, `bugfix-`, or `release-`
-   - Applies changes to the Sandbox environment
+14. **Promote to Production**: Repeat the process for promoting to Production by manually triggering the `04-release-and-plan-production.yml` workflow and approving the pull request to merge the release branch into the `production` branch after change review.
 
-2. **Promote to Staging** (`promote-to-staging.yml`)
-   - Triggered on pull request to the `staging` branch
-   - Plans changes for the Staging environment
-   - Applies changes when the PR is merged
+15. **Apply to Production**: After the pull request is merged, the `05-terraform-apply-production.yml` workflow will automatically run to apply the changes to the Production environment.
 
-3. **Promote to Production** (`promote-to-production.yml`)
-   - Triggered on pull request to the `production` branch
-   - Plans changes for the Production environment
-   - Applies changes when the PR is merged
 
 ## Drift Detection and Correction
 
