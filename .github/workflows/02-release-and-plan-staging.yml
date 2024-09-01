@@ -1,4 +1,4 @@
-name: "02 - release and terraform plan: staging"
+name: "02 - release and terraform plan to: staging"
 
 on:
   workflow_dispatch:

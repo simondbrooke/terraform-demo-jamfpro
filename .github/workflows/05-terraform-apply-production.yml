@@ -1,4 +1,4 @@
-name: "05 - terraform apply: production"
+name: "05 - terraform apply to: production"
 
 on:
   pull_request:
@@ -17,13 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check if running on a release branch
-      run: |
-        branch_name="${GITHUB_REF#refs/heads/}"
-        if [[ ! $branch_name =~ ^release-v ]]; then
-          echo "Error: This workflow can only be run from a release branch (branch name starting with 'release-v')."
-          exit 1
-        fi
-      shell: bash
+      uses: actions/github-script@v7.0.1
+      with:
+        script: |
+          const branchName = context.ref.replace('refs/heads/', '');
+          console.log(`Current branch: ${branchName}`);
+          if (!branchName.startsWith('release-v')) {
+            core.setFailed('This workflow can only be run from a release branch (branch name starting with "release-v").');
+          }
 
   terraform-apply:
     uses: ./.github/workflows/terraform-apply.yml
