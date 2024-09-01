@@ -6,6 +6,9 @@ on:
       source_environment:
         required: true
         type: string
+      target_environment:
+        required: true
+        type: string
       config_directory:
         required: true
         type: string
@@ -73,11 +76,13 @@ jobs:
         uses: softprops/action-gh-release@v2.0.8
         with:
           tag_name: ${{ env.NEW_VERSION }}
-          name: Release ${{ env.NEW_VERSION }}
+          name: ${{ env.NEW_VERSION }}
           body: |
-            This release was manually triggered by @${{ github.actor }}.
-            Source: ${{ inputs.source_environment }}
-            Configuration Hash: ${{ env.CONFIG_HASH }}
+            🚀 This release was manually triggered by @${{ github.actor }}.
+            🔄 Source: ${{ inputs.source_environment }}
+            🎯 Target: ${{ inputs.target_environment }}
+            💻 Commit: ${{ github.sha }}
+            🔒 TF Configuration File Hash: ${{ env.CONFIG_HASH }}
           draft: false
           prerelease: false
           files: |
