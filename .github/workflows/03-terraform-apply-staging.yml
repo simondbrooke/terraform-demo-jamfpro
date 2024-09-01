@@ -41,7 +41,6 @@ jobs:
 
   branch-cleanup:
     needs: [terraform-apply]
-    if: github.event.pull_request.merged == true
     uses: ./.github/workflows/branch-cleanup.yml
     with:
       branch_name: ${{ github.event.pull_request.head.ref }}
