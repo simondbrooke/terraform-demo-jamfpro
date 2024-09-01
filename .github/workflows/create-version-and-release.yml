@@ -82,7 +82,7 @@ jobs:
             🔄 Source: ${{ inputs.source_environment }}
             🎯 Target: ${{ inputs.target_environment }}
             💻 Commit: ${{ github.sha }}
-            🔒 Configuration Hash: ${{ env.CONFIG_HASH }}
+            🔒 TF Configuration File Hash: ${{ env.CONFIG_HASH }}
           draft: false
           prerelease: false
           files: |
