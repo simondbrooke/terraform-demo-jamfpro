@@ -1,4 +1,4 @@
-name: terraform apply
+name: Terraform Apply
 
 on:
   workflow_call:
@@ -19,6 +19,11 @@ on:
     secrets:
       TF_API_TOKEN:
         required: true
+
+env:
+  CONFIG_DIRECTORY: ${{ inputs.config_directory }}
+  TF_CLOUD_ORGANIZATION: ${{ inputs.tf_cloud_organization }}
+  TF_WORKSPACE: ${{ inputs.tf_workspace }}
 
 jobs:
   terraform-apply:
@@ -60,14 +65,14 @@ jobs:
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.1
         id: apply-upload
         with:
-          workspace: ${{ inputs.tf_workspace }}
-          directory: ${{ inputs.config_directory }}
+          workspace: ${{ env.TF_WORKSPACE }}
+          directory: ${{ env.CONFIG_DIRECTORY }}
 
       - name: Create Apply Run
         uses: hashicorp/tfc-workflows-github/actions/create-run@v1.3.1
         id: apply-run
         with:
-          workspace: ${{ inputs.tf_workspace }}
+          workspace: ${{ env.TF_WORKSPACE }}
           configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
 
       - name: Apply
