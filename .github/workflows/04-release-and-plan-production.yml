@@ -12,8 +12,18 @@ on:
 env:
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
 
-jobs:     
+jobs:
+  check-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if running on staging branch
+        if: github.ref != 'refs/heads/staging'
+        run: |
+          echo "Error: This workflow can only be run from the staging branch."
+          exit 1
+
   create-version-and-release:
+    needs: check-branch
     uses: ./.github/workflows/create-version-and-release.yml
     with:
       source_environment: "staging"
