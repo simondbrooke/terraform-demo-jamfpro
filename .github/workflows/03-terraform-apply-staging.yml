@@ -16,11 +16,14 @@ jobs:
   check-branch:
     runs-on: ubuntu-latest
     steps:
-      - name: Check if running on a release branch
-        if: ${{ !startsWith(github.ref, 'refs/heads/release-') }}
-        run: |
-          echo "Error: This workflow can only be run from a release branch (branch name starting with 'release-')."
+    - name: Check if running on a release branch
+      run: |
+        branch_name="${GITHUB_REF#refs/heads/}"
+        if [[ ! $branch_name =~ ^release-v ]]; then
+          echo "Error: This workflow can only be run from a release branch (branch name starting with 'release-v')."
           exit 1
+        fi
+      shell: bash
 
   terraform-apply:
     uses: ./.github/workflows/terraform-apply.yml
