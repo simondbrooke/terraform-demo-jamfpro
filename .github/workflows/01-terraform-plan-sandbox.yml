@@ -72,6 +72,6 @@ jobs:
       target_environment: "sandbox"
       debug: true
       config_directory: "workload/terraform/jamfpro"
-      release_version: release-${{ needs.branch-check.outputs.branch_name }}-to-sandbox
+      release_version: ${{ needs.branch-check.outputs.branch_name }}
     secrets:
       TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
