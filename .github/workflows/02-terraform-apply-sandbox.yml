@@ -51,6 +51,7 @@ jobs:
           comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
 
       - name: Update PR
+        if: github.event.pull_request.merged == true
         uses: actions/github-script@v6
         env:
           APPLY_RESULT: "${{ steps.apply.outputs.apply_result }}"
