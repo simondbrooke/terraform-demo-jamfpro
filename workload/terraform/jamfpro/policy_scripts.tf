@@ -55,7 +55,7 @@ resource "jamfpro_policy" "jamfpro_policy_script_001" {
 
 resource "jamfpro_policy" "jamfpro_policy_script_002" {
   name                          = "tf-dw-ghatest-policy-script-reset_safari"
-  enabled                       = true
+  enabled                       = false
   trigger_checkin               = false
   trigger_enrollment_complete   = false
   trigger_login                 = false
