@@ -129,7 +129,7 @@ jobs:
             const { data: pullRequest } = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Terraform Plan for ${{ inputs.target_environment }} Release ${{ inputs.release_version }}`,
+              title: `Terraform Plan for ${{ inputs.target_environment }}: ${{ inputs.release_version }}`,
               head: `${{ inputs.release_version }}`,
               base: '${{ inputs.target_environment }}',
               body: planSummary
