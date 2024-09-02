@@ -40,7 +40,7 @@ jobs:
       target_environment: "staging"
       debug: ${{ inputs.debug }}
       config_directory: "workload/terraform/jamfpro"
-      release_version: ${{ needs.create-version-and-release.outputs.new_version }}
+      release_version: release-${{ needs.create-version-and-release.outputs.new_version }}-to-staging
     secrets:
       TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
 
