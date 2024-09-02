@@ -70,13 +70,22 @@ jobs:
             [View Full Terraform Cloud Plan](${{ inputs.run_link }})
             `;
 
-            const { data: pullRequest } = await github.rest.pulls.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `Terraform Plan for ${{ inputs.target_environment }}: ${{ inputs.release_version }}`,
-              head: `${{ inputs.release_version }}`,
-              base: '${{ inputs.target_environment }}',
-              body: planSummary
-            });
+            const branchName = '${{ inputs.release_version }}';
+            console.log(`Attempting to create PR from branch: ${branchName}`);
 
-            core.setOutput('pull-request-url', pullRequest.html_url);
+            try {
+              const { data: pullRequest } = await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Terraform Plan for ${{ inputs.target_environment }}: ${{ inputs.release_version }}`,
+                head: branchName,
+                base: '${{ inputs.target_environment }}',
+                body: planSummary
+              });
+
+              console.log(`Successfully created PR: ${pullRequest.html_url}`);
+              core.setOutput('pull-request-url', pullRequest.html_url);
+            } catch (error) {
+              console.error(`Error creating PR: ${error.message}`);
+              core.setFailed(`Failed to create PR: ${error.message}`);
+            }
