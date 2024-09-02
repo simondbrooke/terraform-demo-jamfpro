@@ -89,7 +89,7 @@ jobs:
         with:
           plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
 
-      - name: Update PR
+      - name: Create or Update PR Comment
         uses: actions/github-script@v6
         if: always()
         env:
@@ -109,9 +109,24 @@ jobs:
             
             *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
             
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
+            if (context.eventName === 'pull_request') {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              })
+            } else {
+              github.rest.checks.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'Terraform Plan',
+                head_sha: context.sha,
+                status: 'completed',
+                conclusion: '${{ steps.plan-output.outputs.exitcode }}' === '0' ? 'success' : 'failure',
+                output: {
+                  title: 'Terraform Plan',
+                  summary: output
+                }
+              })
+            }
