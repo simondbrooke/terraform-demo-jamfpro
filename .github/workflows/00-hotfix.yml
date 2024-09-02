@@ -12,6 +12,11 @@ on:
 env:
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
 
+permissions:
+  pull-requests: write  # required to update PR
+  contents: write       # required to create release and branch
+  id-token: write 
+
 jobs:
   check-branch:
     runs-on: ubuntu-latest
@@ -40,10 +45,10 @@ jobs:
       target_environment: "production"
       debug: ${{ inputs.debug }}
       config_directory: "workload/terraform/jamfpro"
-      new_version: ${{ needs.create-hotfix-version-and-release.outputs.new_version }}
+      release_version: ${{ needs.create-hotfix-version-and-release.outputs.new_version }}
     secrets:
       TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
-
+  
   manual-approval:
     needs: terraform-plan-production
     runs-on: ubuntu-latest
