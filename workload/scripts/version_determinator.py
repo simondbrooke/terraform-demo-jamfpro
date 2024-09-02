@@ -297,39 +297,70 @@ def is_field_value_changed(changed_files, config_directory):
     return False
 
 def determine_version_increment(config_directory):
-    """
-    Determine the type of version increment based on the changes in Terraform files.
-
-    Args:
-        config_directory (str): The directory containing Terraform configurations.
-
-    Returns:
-        str: The type of version increment ('major', 'minor', or 'patch').
-    """
     latest_tag = get_latest_tag()
     changed_files = get_changed_files(latest_tag)
 
-    # If this is the first run (no tags), treat it as a major version
     if not latest_tag:
         print("No existing tags found. Treating as initial major version.")
         return 'major'
 
     print("\nEvaluating changes for version increment:")
+    
+    changes = {
+        'major': False,
+        'minor': False,
+        'patch': False
+    }
+
     if is_new_resource_type(changed_files, config_directory):
-        print("Major version increment: New resource type introduced.")
-        return 'major'
+        changes['major'] = True
     if is_new_resource_iteration(changed_files, config_directory):
-        print("Minor version increment: New iteration of existing resource type.")
-        return 'minor'
+        changes['minor'] = True
+    if is_file_added_or_renamed(changed_files, config_directory):
+        changes['minor'] = True
+    if is_resource_removed_or_commented(changed_files, config_directory):
+        changes['minor'] = True
     if is_field_changed(changed_files, config_directory):
-        print("Minor version increment: Fields added or removed from existing resources.")
-        return 'minor'
+        changes['patch'] = True
     if is_field_value_changed(changed_files, config_directory):
-        print("Patch version increment: Field values changed in existing resources.")
+        changes['patch'] = True
+        
+    if changes['major']:
+        print("Major version increment: Significant changes detected.")
+        return 'major'
+    elif changes['minor']:
+        print("Minor version increment: Notable changes detected.")
+        return 'minor'
+    elif changes['patch']:
+        print("Patch version increment: Small changes detected.")
+        return 'patch'
+    else:
+        print("No changes detected. Defaulting to patch increment.")
         return 'patch'
 
-    print("No significant changes detected. Defaulting to patch increment.")
-    return 'patch'  # Default to patch if no conditions are met
+def is_file_added_or_renamed(changed_files, config_directory):
+    print("Checking for added or renamed files:")
+    for file in changed_files:
+        if file.endswith('.tf') and file.startswith(config_directory):
+            print(f"  New or renamed file detected: {file}")
+            return True
+    print("No new or renamed files detected.")
+    return False
+
+def is_resource_removed_or_commented(changed_files, config_directory):
+    print("Checking for removed or commented resources:")
+    for file in changed_files:
+        if file.endswith('.tf') and file.startswith(config_directory):
+            old_content = subprocess.check_output(['git', 'show', f'HEAD:{file}'], stderr=subprocess.DEVNULL).decode()
+            new_content = read_file_content(file)
+            old_resources = set(parse_resource(old_content).keys())
+            new_resources = set(parse_resource(new_content).keys())
+            removed_resources = old_resources - new_resources
+            if removed_resources:
+                print(f"  Removed or commented resources in {file}: {', '.join(map(str, removed_resources))}")
+                return True
+    print("No removed or commented resources detected.")
+    return False
 
 def set_output(name, value):
     """
