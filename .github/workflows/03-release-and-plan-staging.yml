@@ -12,6 +12,9 @@ on:
 env:
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
 
+permissions:
+  pull-requests: write
+
 jobs:
   check-branch:
     runs-on: ubuntu-latest
