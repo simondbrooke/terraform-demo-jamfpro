@@ -9,12 +9,12 @@
 #   country         = "The United States of America"
 # }
 
-resource "jamfpro_building" "jamfpro_building_002" {
-  name            = "tf-dw-ghatest-jamf-headquarters"
-  street_address1 = "100 Washington Ave S"
-  street_address2 = "Suite 1100"
-  city            = "Minneapolis"
-  state_province  = "Minnesota"
-  zip_postal_code = "55401"
-  country         = "The United States of America"
-}
+# resource "jamfpro_building" "jamfpro_building_002" {
+#   name            = "tf-dw-ghatest-jamf-headquarters"
+#   street_address1 = "100 Washington Ave S"
+#   street_address2 = "Suite 1100"
+#   city            = "Minneapolis"
+#   state_province  = "Minnesota"
+#   zip_postal_code = "55401"
+#   country         = "The United States of America"
+# }
