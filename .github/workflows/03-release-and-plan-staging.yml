@@ -50,7 +50,7 @@ jobs:
       TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
 
   create-pr:
-    needs: terraform-plan
+    needs: [create-version-and-release, terraform-plan]
     uses: ./.github/workflows/create-pr.yml
     with:
       target_environment: "staging"
