@@ -26,3 +26,12 @@ resource "jamfpro_script" "jamfpro_script_003" {
   info            = "Deleting Safari preference files to reset to system default."
   notes           = "Jamf Pro script parameters: none"
 }
+
+resource "jamfpro_script" "jamfpro_script_004" {
+  name            = "tf-dw-ghatest-encrypt-apfs-volume-v2.1.4"
+  script_contents = file("${path.module}/support_files/scripts/Encrypt_APFS_Volume.zsh")
+  os_requirements = "13"
+  priority        = "BEFORE"
+  info            = "Deleting Safari preference files to reset to system default."
+  notes           = "Jamf Pro script parameters: none"
+}
