@@ -76,8 +76,8 @@ jobs:
       tf_cloud_organization: "deploymenttheory"
       tf_workspace: "terraform-jamfpro-sandbox" 
       target_environment: "sandbox"
-      debug: ${{ inputs.debug }}
+      debug: true
       config_directory: "workload/terraform/jamfpro"
-      release_version: release-${{ needs.create-version-and-release.outputs.new_version }}-to-sandbox
+      release_version: release-${{ github.event.inputs.branch_name }}-to-sandbox
     secrets:
       TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
