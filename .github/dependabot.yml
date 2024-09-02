@@ -24,7 +24,7 @@ updates:
 
   # Python dependencies
   - package-ecosystem: "pip"
-    directory: "/"
+    directory: "/workload/scripts"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
