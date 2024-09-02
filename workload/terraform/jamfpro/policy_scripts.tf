@@ -1,5 +1,5 @@
 resource "jamfpro_policy" "jamfpro_policy_script_001" {
-  name                          = "tf-ghatest-policy-script-correct-application-permissions"
+  name                          = "tf-dw-ghatest-policy-script-correct-application-permissions"
   enabled                       = true
   trigger_checkin               = false
   trigger_enrollment_complete   = false
@@ -54,7 +54,7 @@ resource "jamfpro_policy" "jamfpro_policy_script_001" {
 }
 
 resource "jamfpro_policy" "jamfpro_policy_script_002" {
-  name                          = "tf-ghatest-policy-script-reset_safari"
+  name                          = "tf-dw-ghatest-policy-script-reset_safari"
   enabled                       = true
   trigger_checkin               = false
   trigger_enrollment_complete   = false
