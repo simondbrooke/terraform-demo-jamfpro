@@ -81,17 +81,17 @@ jobs:
     needs: terraform-plan
     uses: ./.github/workflows/create-pr.yml
     with:
-      target_environment: "staging"
+      target_environment: "production"
       release_version: release-${{ needs.production-release.outputs.release_version }}-to-production
       plan_id: ${{ needs.terraform-plan.outputs.plan_id }}
       add: ${{ needs.terraform-plan.outputs.add }}
       change: ${{ needs.terraform-plan.outputs.change }}
       destroy: ${{ needs.terraform-plan.outputs.destroy }}
       run_link: ${{ needs.terraform-plan.outputs.run_link }}
-      tf_workspace: "terraform-jamfpro-staging"
+      tf_workspace: "terraform-jamfpro-production"
 
   send-notification:
-    needs: [production-release, terraform-plan]
+    needs: [production-release, terraform-plan, create-pr]
     if: always()
     uses: ./.github/workflows/send-notification.yml
     with:
