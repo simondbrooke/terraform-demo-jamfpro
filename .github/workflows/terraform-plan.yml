@@ -19,7 +19,7 @@ on:
       config_directory:
         required: true
         type: string
-      new_version:
+      release_version:
         required: true
         type: string
     secrets:
