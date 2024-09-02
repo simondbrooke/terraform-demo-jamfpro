@@ -13,7 +13,9 @@ env:
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
 
 permissions:
-  pull-requests: write
+  pull-requests: write # required to create a PR
+  contents: write 
+  id-token: write 
 
 jobs:
   check-branch:
