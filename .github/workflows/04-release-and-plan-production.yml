@@ -68,7 +68,7 @@ jobs:
       target_environment: "production"
       debug: ${{ inputs.debug }}
       config_directory: "workload/terraform/jamfpro"
-      new_version: ${{ needs.production-release.outputs.release_version }}
+      release_version: release-${{ needs.production-release.outputs.release_version }}-to-production
     secrets:
       TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
 
