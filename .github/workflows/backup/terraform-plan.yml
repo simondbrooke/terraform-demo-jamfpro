@@ -22,22 +22,6 @@ on:
       release_version:
         required: true
         type: string
-    outputs:
-      plan_id:
-        description: "The ID of the Terraform plan"
-        value: ${{ jobs.terraform-plan.outputs.plan_id }}
-      add:
-        description: "Number of resources to add"
-        value: ${{ jobs.terraform-plan.outputs.add }}
-      change:
-        description: "Number of resources to change"
-        value: ${{ jobs.terraform-plan.outputs.change }}
-      destroy:
-        description: "Number of resources to destroy"
-        value: ${{ jobs.terraform-plan.outputs.destroy }}
-      run_link:
-        description: "Link to the Terraform Cloud run"
-        value: ${{ jobs.terraform-plan.outputs.run_link }}
     secrets:
       TF_API_TOKEN:
         required: true
@@ -50,12 +34,9 @@ env:
 jobs:
   terraform-plan:
     runs-on: ubuntu-latest
-    outputs:
-      plan_id: ${{ steps.plan-output.outputs.plan_id }}
-      add: ${{ steps.plan-output.outputs.add }}
-      change: ${{ steps.plan-output.outputs.change }}
-      destroy: ${{ steps.plan-output.outputs.destroy }}
-      run_link: ${{ steps.plan-run.outputs.run_link }}
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout release branch
         uses: actions/checkout@v4.1.7
@@ -112,3 +93,46 @@ jobs:
         id: plan-output
         with:
           plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
+
+      - name: Create PR with Terraform Plan
+        uses: actions/github-script@v7.0.1
+        id: create-pr
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const additions = parseInt(`${{ steps.plan-output.outputs.add }}`, 10);
+            const changes = parseInt(`${{ steps.plan-output.outputs.change }}`, 10);
+            const destructions = parseInt(`${{ steps.plan-output.outputs.destroy }}`, 10);
+
+            if (additions === 0 && changes === 0 && destructions === 0) {
+              console.log('No changes detected in the Terraform plan. Skipping PR creation.');
+              return; // Exit the script without creating a PR
+            }
+
+            const planSummary = `
+            ## Terraform Cloud Plan Output for ${{ inputs.target_environment }}
+
+            ### Plan Details:
+            - **Plan ID:** ${{ steps.plan-output.outputs.plan_id }}
+            - **Workspace:** ${{ env.TF_WORKSPACE }}
+            - **Additions:** ${{ steps.plan-output.outputs.add }}
+            - **Changes:** ${{ steps.plan-output.outputs.change }}
+            - **Destructions:** ${{ steps.plan-output.outputs.destroy }}
+            
+            ### Summary:
+            \`\`\`
+            Plan: ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy.
+            \`\`\`
+            [View Full Terraform Cloud Plan](${{ steps.plan-run.outputs.run_link }})
+            `;
+
+            const { data: pullRequest } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Terraform Plan for ${{ inputs.target_environment }}: ${{ inputs.release_version }}`,
+              head: `${{ inputs.release_version }}`,
+              base: '${{ inputs.target_environment }}',
+              body: planSummary
+            });
+
+            core.setOutput('pull-request-url', pullRequest.html_url);
