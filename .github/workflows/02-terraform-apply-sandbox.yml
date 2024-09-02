@@ -16,9 +16,9 @@ env:
   # other env vars are set within tfcloud directly for within the tf workspace
 
 permissions:
-  contents: write
-  id-token: write
-  pull-requests: write
+  pull-requests: write  # required to update PR
+  contents: write       # required to create release and branch
+  id-token: write 
 
 jobs:
   terraform-apply:
