@@ -22,3 +22,8 @@ resource "jamfpro_dock_item" "jamfpro_dock_item_004" {
   type = "Folder" // App / File / Folder
   path = "~/Downloads"
 }
+resource "jamfpro_dock_item" "jamfpro_dock_item_005" {
+  name = "tf-dw-ghatest-dockItem-folder-downloadsFolder3"
+  type = "Folder" // App / File / Folder
+  path = "~/Downloads"
+}
