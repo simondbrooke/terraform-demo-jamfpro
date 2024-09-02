@@ -1,0 +1,82 @@
+name: Create PR with Terraform Plan
+
+on:
+  workflow_call:
+    inputs:
+      target_environment:
+        required: true
+        type: string
+      release_version:
+        required: true
+        type: string
+      plan_id:
+        required: true
+        type: string
+      add:
+        required: true
+        type: string
+      change:
+        required: true
+        type: string
+      destroy:
+        required: true
+        type: string
+      run_link:
+        required: true
+        type: string
+      tf_workspace:
+        required: true
+        type: string
+    outputs:
+      pull-request-url:
+        description: "URL of the created pull request"
+        value: ${{ jobs.create-pr.outputs.pull-request-url }}
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    outputs:
+      pull-request-url: ${{ steps.create-pr.outputs.pull-request-url }}
+    steps:
+      - name: Create PR with Terraform Plan
+        uses: actions/github-script@v7.0.1
+        id: create-pr
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const additions = parseInt('${{ inputs.add }}', 10);
+            const changes = parseInt('${{ inputs.change }}', 10);
+            const destructions = parseInt('${{ inputs.destroy }}', 10);
+
+            if (additions === 0 && changes === 0 && destructions === 0) {
+              console.log('No changes detected in the Terraform plan. Skipping PR creation.');
+              return; // Exit the script without creating a PR
+            }
+
+            const planSummary = `
+            ## Terraform Cloud Plan Output for ${{ inputs.target_environment }}
+
+            ### Plan Details:
+            - **Plan ID:** ${{ inputs.plan_id }}
+            - **Workspace:** ${{ inputs.tf_workspace }}
+            - **Additions:** ${{ inputs.add }}
+            - **Changes:** ${{ inputs.change }}
+            - **Destructions:** ${{ inputs.destroy }}
+            
+            ### Summary:
+            \`\`\`
+            Plan: ${{ inputs.add }} to add, ${{ inputs.change }} to change, ${{ inputs.destroy }} to destroy.
+            \`\`\`
+            [View Full Terraform Cloud Plan](${{ inputs.run_link }})
+            `;
+
+            const { data: pullRequest } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Terraform Plan for ${{ inputs.target_environment }}: ${{ inputs.release_version }}`,
+              head: `${{ inputs.release_version }}`,
+              base: '${{ inputs.target_environment }}',
+              body: planSummary
+            });
+
+            core.setOutput('pull-request-url', pullRequest.html_url);
