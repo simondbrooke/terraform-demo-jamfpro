@@ -1,0 +1,65 @@
+# ref: https://sentenz.github.io/convention/convention/conventional-commits/
+name: "01 - terraform speculative plan: sandbox"
+
+on:
+  push:
+    branches:
+      - 'feat-*'
+      - 'fix-*'
+      - 'docs-*'
+      - 'style-*'
+      - 'refactor-*'
+      - 'test-*'
+      - 'chore-*'
+      - 'build-*'
+      - 'ci-*'
+      - 'perf-*'
+    paths:
+      - '**/*.tf'
+
+env:
+  TF_CLOUD_ORGANIZATION: "deploymenttheory"
+  TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
+  TF_WORKSPACE: "terraform-jamfpro-sandbox"
+  CONFIG_DIRECTORY: "workload/terraform/jamfpro"
+
+permissions:
+  contents: write
+  id-token: write
+  pull-requests: write
+  
+jobs:
+  branch-check:
+    name: "branch check"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.7
+
+      - name: Extract branch name
+        id: extract_branch
+        run: echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+        
+      - name: Validate Branch Name
+        run: |
+          branch="${{ steps.extract_branch.outputs.branch }}"
+          if [[ "$branch" =~ ^(feat|fix|docs|style|refactor|test|chore|build|ci|perf)- ]]; then
+            echo "Success: Branch name '$branch' is valid."
+            exit 0
+          else
+            echo "Error: Branch name must start with 'feat-', 'fix-', 'docs-', 'style-', 'refactor-', 'test-', 'chore-', 'build-', 'ci-', or 'perf-'"
+            exit 1
+          fi
+
+  terraform-plan:
+    needs: branch-check
+    uses: ./.github/workflows/terraform-plan.yml
+    with:
+      tf_cloud_organization: "deploymenttheory"
+      tf_workspace: "terraform-jamfpro-sandbox" 
+      target_environment: "sandbox"
+      debug: true
+      config_directory: "workload/terraform/jamfpro"
+      release_version: ${{ needs.branch-check.outputs.branch_name }}
+    secrets:
+      TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
