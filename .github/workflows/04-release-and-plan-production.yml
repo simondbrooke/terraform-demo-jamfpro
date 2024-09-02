@@ -36,17 +36,28 @@ jobs:
 
       - name: Get latest release version
         id: get_release
-        run: |
-          LATEST_TAG=$(git describe --tags --abbrev=0)
-          echo "release_version=${LATEST_TAG}" >> $GITHUB_OUTPUT
-          echo "Latest release version: ${LATEST_TAG}"
+        uses: actions/github-script@v7.0.1
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const releases = await github.rest.repos.listReleases({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            const latestRelease = releases.data[0];
+            if (latestRelease) {
+              console.log(`Latest release version: ${latestRelease.tag_name}`);
+              core.setOutput('release_version', latestRelease.tag_name);
+            } else {
+              core.setFailed('No releases found');
+            }
 
       - name: Create production release branch
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git checkout -b release-${LATEST_TAG}-to-production
-          git push origin release-${LATEST_TAG}-to-production
+          git checkout -b release-${{ steps.get_release.outputs.release_version }}-to-production
+          git push origin release-${{ steps.get_release.outputs.release_version }}-to-production
 
   terraform-plan:
     needs: production-release
