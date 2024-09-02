@@ -17,7 +17,7 @@
 
 
 resource "jamfpro_user_group" "jamfpro_user_group_002" {
-  name                = "tf-ghatest-usergroup-smart"
+  name                = "tf-dw-ghatest-usergroup-smart"
   is_smart            = true
   is_notify_on_change = true
 
