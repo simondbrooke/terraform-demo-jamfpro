@@ -1,0 +1,33 @@
+# See GitHub's documentation for more information on this file:
+# https://docs.github.com/en/code-security/supply-chain-security/keeping-your-dependencies-updated-automatically/configuration-options-for-dependency-updates
+version: 2
+updates:
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # Terraform
+  - package-ecosystem: "terraform"
+    directory: "/workload/terraform/jamfpro"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "terraform"
+
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/workload/scripts"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "python"
