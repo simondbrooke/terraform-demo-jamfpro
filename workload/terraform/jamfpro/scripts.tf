@@ -20,7 +20,7 @@ resource "jamfpro_script" "jamfpro_script_002" {
 
 resource "jamfpro_script" "jamfpro_script_003" {
   name            = "tf-ghatest-reset-safari-v2.1.4"
-  script_contents = file("${path.module}/support_files/scripts/Reset Safari.sh")
+  script_contents = file("${path.module}/support_files/scripts/Reset_Safari.sh")
   os_requirements = "13"
   priority        = "BEFORE"
   info            = "Deleting Safari preference files to reset to system default."
