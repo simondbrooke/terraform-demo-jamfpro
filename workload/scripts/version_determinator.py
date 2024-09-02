@@ -21,6 +21,7 @@ def get_latest_tag():
 def get_changed_files(latest_tag):
     """
     Get a list of files changed since the latest tag or all files if no tag exists.
+    Handles renamed files gracefully.
 
     Args:
         latest_tag (str): The latest Git tag, or None if no tags exist.
@@ -30,22 +31,39 @@ def get_changed_files(latest_tag):
     """
     if latest_tag:
         try:
-            files = subprocess.check_output(['git', 'diff', '--name-only', latest_tag, 'HEAD']).decode().split('\n')
+            # Use --diff-filter=ACMRT to include only added, copied, modified, renamed, or type-changed files
+            files = subprocess.check_output(['git', 'diff', '--name-status', '--diff-filter=ACMRT', latest_tag, 'HEAD']).decode().split('\n')
             print(f"Files changed since {latest_tag}:")
+            changed_files = []
             for file in files:
                 if file:
-                    print(f"  - {file}")
-            return files
+                    status, *paths = file.split('\t')
+                    if status.startswith('R'):  # Renamed file
+                        print(f"  - Renamed: {paths[0]} -> {paths[1]}")
+                        changed_files.append(paths[1])  # Add the new filename
+                    else:
+                        print(f"  - {paths[0]}")
+                        changed_files.append(paths[0])
+            return changed_files
         except subprocess.CalledProcessError:
             print("Error: Unable to get changed files. Using all files instead.")
     
     # If no tag exists or there's an error, return all tracked files
     files = subprocess.check_output(['git', 'ls-files']).decode().split('\n')
     print("No previous tag found or error occurred. Using all tracked files:")
-    for file in files:
-        if file:
-            print(f"  - {file}")
-    return files
+    return [file for file in files if file]
+
+def file_exists(file_path):
+    """
+    Check if a file exists.
+
+    Args:
+        file_path (str): The path to the file.
+
+    Returns:
+        bool: True if the file exists, False otherwise.
+    """
+    return os.path.isfile(file_path)
 
 def read_file_content(file_path):
     """
@@ -55,12 +73,15 @@ def read_file_content(file_path):
         file_path (str): The path to the file.
 
     Returns:
-        str: The content of the file.
+        str: The content of the file, or an empty string if the file doesn't exist.
 
     Raises:
         UnicodeDecodeError: If the file cannot be decoded using UTF-8.
-        IOError: If there's an issue reading the file.
     """
+    if not file_exists(file_path):
+        print(f"Warning: File {file_path} does not exist. Skipping.")
+        return ""
+    
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             content = file.read()
@@ -68,10 +89,10 @@ def read_file_content(file_path):
         return content
     except UnicodeDecodeError:
         print(f"Error: Unable to decode file {file_path} with UTF-8 encoding.")
-        raise
+        return ""
     except IOError as e:
         print(f"Error: Unable to read file {file_path}. {str(e)}")
-        raise
+        return ""
 
 def parse_resource(content):
     """
