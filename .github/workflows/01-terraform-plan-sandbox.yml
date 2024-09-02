@@ -16,13 +16,6 @@ on:
       - 'perf-*'
     paths:
       - '**/*.tf'
-      
-  workflow_dispatch:
-    inputs:
-      branch_name:
-        description: 'Branch to run speculative plan (must start with feat-, fix-, docs-, style-, refactor-, test-, chore-, build-, ci-, or perf-)'
-        required: true
-        default: 'feat-'
 
 env:
   TF_CLOUD_ORGANIZATION: "deploymenttheory"
@@ -54,16 +47,25 @@ jobs:
         startsWith(github.ref, 'refs/heads/ci-') ||
         startsWith(github.ref, 'refs/heads/perf-')
       )
-    name: "Terraform Speculative Plan"
+    name: "branch check"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.7
+
+      - name: Extract branch name
+        id: extract_branch
+        uses: actions/github-script@v7.0.1
+        with:
+          script: |
+            const branch = context.ref.replace('refs/heads/', '');
+            core.setOutput('branch', branch);
+          result-encoding: string
         
       - name: Validate Branch Name for manual runs
         if: github.event_name == 'workflow_dispatch'
         run: |
-          branch="${{ github.event.inputs.branch_name }}"
+          branch="${{ steps.extract_branch.outputs.branch }}"
           if [[ ! "$branch" =~ ^(feat|fix|docs|style|refactor|test|chore|build|ci|perf)- ]]; then
             echo "Error: Branch name must start with 'feat-', 'fix-', 'docs-', 'style-', 'refactor-', 'test-', 'chore-', 'build-', 'ci-', or 'perf-'"
             exit 1
@@ -78,6 +80,6 @@ jobs:
       target_environment: "sandbox"
       debug: true
       config_directory: "workload/terraform/jamfpro"
-      release_version: release-${{ github.event.inputs.branch_name }}-to-sandbox
+      release_version: release-${{ needs.branch-check.outputs.branch_name }}-to-sandbox
     secrets:
       TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
