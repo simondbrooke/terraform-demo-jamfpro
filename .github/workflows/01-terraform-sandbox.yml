@@ -1,5 +1,5 @@
 # ref: https://sentenz.github.io/convention/convention/conventional-commits/
-name: "01 - terraform testing: sandbox"
+name: "01 - terraform speculative plan: sandbox"
 
 on:
   push:
@@ -14,11 +14,13 @@ on:
       - 'build-*'
       - 'ci-*'
       - 'perf-*'
+    paths:
+      - '**/*.tf'
       
   workflow_dispatch:
     inputs:
       branch_name:
-        description: 'Branch to promote to Sandbox (must start with feat-, fix-, docs-, style-, refactor-, test-, chore-, build-, ci-, or perf-)'
+        description: 'Branch to run speculative plan (must start with feat-, fix-, docs-, style-, refactor-, test-, chore-, build-, ci-, or perf-)'
         required: true
         default: 'feat-'
 
@@ -35,7 +37,7 @@ permissions:
   id-token: write
 
 jobs:
-  terraform-apply:
+  terraform-plan:
     if: >
       github.repository != 'hashicorp-education/learn-terraform-github-actions' &&
       (
@@ -51,7 +53,7 @@ jobs:
         startsWith(github.ref, 'refs/heads/ci-') ||
         startsWith(github.ref, 'refs/heads/perf-')
       )
-    name: "Terraform Apply to Sandbox"
+    name: "Terraform Speculative Plan"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -61,29 +63,55 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           branch="${{ github.event.inputs.branch_name }}"
-          if [[ ! "$branch" =~ ^(feature|bugfix|release|hotfix|chore|spike|config|docs|test)- ]]; then
-            echo "Error: Branch name must start with 'feat-', 'fix-', 'style-', 'chore-', 'config-', 'docs-', or 'test-'"
+          if [[ ! "$branch" =~ ^(feat|fix|docs|style|refactor|test|chore|build|ci|perf)- ]]; then
+            echo "Error: Branch name must start with 'feat-', 'fix-', 'docs-', 'style-', 'refactor-', 'test-', 'chore-', 'build-', 'ci-', or 'perf-'"
             exit 1
           fi
 
       - name: Upload Configuration
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.1
-        id: apply-upload
+        id: plan-upload
         with:
           workspace: ${{ env.TF_WORKSPACE }}
           directory: ${{ env.CONFIG_DIRECTORY }}
 
-      - name: Create Apply Run
+      - name: Create Plan Run
         uses: hashicorp/tfc-workflows-github/actions/create-run@v1.3.1
-        id: apply-run
+        id: plan-run
         with:
           workspace: ${{ env.TF_WORKSPACE }}
-          configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
+          configuration_version: ${{ steps.plan-upload.outputs.configuration_version_id }}
+          plan_only: true
 
-      - name: Apply
-        uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.3.1
-        if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
-        id: apply
+      - name: Get Plan Output
+        uses: hashicorp/tfc-workflows-github/actions/plan-output@v1.3.1
+        id: plan-output
         with:
-          run: ${{ steps.apply-run.outputs.run_id }}
-          comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
+          plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
+
+      - name: Update PR
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "${{ steps.plan-output.outputs.plan }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Plan 📖\`${{ steps.plan-output.outputs.exitcode }}\`
+            
+            <details><summary>Show Plan</summary>
+            
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+            
+            </details>
+            
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })

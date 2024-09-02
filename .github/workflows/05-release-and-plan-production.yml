@@ -1,4 +1,4 @@
-name: "04 - release and terraform plan to: production"
+name: "05 - release and terraform plan to: production"
 
 on:
   workflow_dispatch:
