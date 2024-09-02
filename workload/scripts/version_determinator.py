@@ -316,15 +316,15 @@ def determine_version_increment(config_directory):
         changes['major'] = True
     if is_new_resource_iteration(changed_files, config_directory):
         changes['minor'] = True
-    if is_field_changed(changed_files, config_directory):
-        changes['minor'] = True
-    if is_field_value_changed(changed_files, config_directory):
-        changes['patch'] = True
     if is_file_added_or_renamed(changed_files, config_directory):
         changes['minor'] = True
     if is_resource_removed_or_commented(changed_files, config_directory):
         changes['minor'] = True
-
+    if is_field_changed(changed_files, config_directory):
+        changes['patch'] = True
+    if is_field_value_changed(changed_files, config_directory):
+        changes['patch'] = True
+        
     if changes['major']:
         print("Major version increment: Significant changes detected.")
         return 'major'
