@@ -9,7 +9,6 @@ This repository contains Terraform configurations for managing resources in Jamf
 - [Environment Setup](#environment-setup)
 - [Workflow Overview](#workflow-overview)
 - [Branching Strategy](#branching-strategy)
-- [Getting Started](#getting-started)
 - [GitHub Actions Workflows](#github-actions-workflows)
 - [Drift Detection and Correction](#drift-detection-and-correction)
 - [Example Terraform Resource](#example-terraform-resource)
@@ -34,17 +33,21 @@ Before you begin, ensure you have the following prerequisites in place:
 ├── .github
 │   └── workflows
 │       ├── 00-hotfix.yml
-│       ├── 01-terraform-sandbox.yml
-│       ├── 02-release-and-plan-staging.yml
-│       ├── 03-terraform-apply-staging.yml
-│       ├── 04-release-and-plan-production.yml
-│       ├── 05-terraform-apply-production.yml
+│       ├── 01-terraform-plan-sandbox.yml
+│       ├── 02-terraform-apply-sandbox.yml
+│       ├── 03-release-and-plan-staging.yml
+│       ├── 04-terraform-apply-staging.yml
+│       ├── 05-release-and-plan-production.yml
+│       ├── 06-terraform-apply-production.yml
 │       ├── branch-cleanup.yml
+│       ├── create-pr.yml
 │       ├── create-version-and-release.yml
+│       ├── drift.yml
 │       ├── lint.yml
 │       ├── send-notification.yml
 │       ├── terraform-apply.yml
-│       └── terraform-plan.yml
+│       ├── terraform-plan.yml
+│       └── update-release.yml
 ├── workload
 │   ├── scripts
 │   │   ├── hash_generator.py
@@ -74,19 +77,32 @@ Each environment has its own Terraform Cloud workspace:
 
 ## Workflow Overview
 
-1. Developers create short-lived branches prefixed with `feature-`, `bugfix-`, `hotfix-`, `chore-`, `config-`, `docs-`, or `test-`.
-2. Changes are automatically applied to the Sandbox environment when pushed from these branches to sandbox.
-3. Once all desired changes have been tested and merged into the sandbox branch, the promotion to Staging begins:
-   a. The "02 - release and terraform plan to: staging" workflow is manually triggered from the sandbox branch.
+1. Developers create short-lived branches prefixed with :
+      - 'fix-*'
+      - 'docs-*'
+      - 'style-*'
+      - 'refactor-*'
+      - 'test-*'
+      - 'chore-*'
+      - 'build-*'
+      - 'ci-*'
+      - 'perf-*'
+  
+  This follows the [Conventional Commits](ref: https://sentenz.github.io/convention/convention/conventional-commits/) specification for commit messages. These branches are merged into the `sandbox` branch for testing.
+2. Changes are automatically checked for linted and formatting as well as tf planned against the Sandbox environment when pushed from these branches to sandbox by `01-terraform-plan-sandbox.yml`.
+3. Once all desired changes have been tested, the short-lived branch is PR'd into the sandbox branch.
+Once merged into the sandbox branch, the changes are automatically applied to the Sandbox environment by `02-terraform-apply-sandbox.yml`.
+4. Once the changes are applied to the Sandbox environment, promotion to Staging begins:
+   a. The `03 - release and terraform plan to: staging` workflow is manually triggered from the sandbox branch.
    b. This workflow creates a new version and a new release branch (e.g., `release-v1.2.3`).
    c. It then generates a Terraform plan for the Staging environment using this release branch.
    d. A pull request is created from the release branch to the staging branch, with the plan for review.
-4. After the pull request is reviewed and approved:
+5. After the pull request is reviewed and approved:
    a. The pull request is merged into the staging branch.
-   b. This triggers the "03 - terraform apply to: staging" workflow.
+   b. This triggers the `04-terraform-apply-staging` workflow.
    c. The workflow checks that the merge is from a release branch (starting with `release-v`), then applies the Terraform changes to the Staging environment.
    d. After successful apply, the release branch is cleaned up (deleted).
-5. The process for promoting to Production follows a similar pattern with its own workflows:
+6. The process for promoting to Production follows a similar pattern. Whereby a manual trigger of the `05 - release and terraform plan to: production` workflow is done from the staging branch.
    a. A new release and plan workflow is manually triggered from the staging branch.
    b. A new release branch is created for production promotion.
    c. After review and approval, the changes are applied to the Production environment.
@@ -103,13 +119,16 @@ Our branching strategy consists of long-lived branches, short-lived feature bran
 | Long-lived  | `sandbox`   | Represents the sandbox environment. All feature branches are merged here first. | Permanent |
 | Long-lived  | `staging`   | Represents the staging environment. Release branches are merged here for testing before production. | Permanent |
 | Long-lived  | `production` | Represents the production environment. Final destination for all changes. | Permanent |
-| Short-lived | `feature-*`  | For developing new features | Merged to `sandbox` when complete, then manually deleted |
-| Short-lived | `bugfix-*`   | For fixing bugs | Merged to `sandbox` when complete, then manually deleted |
-| Short-lived | `hotfix-*`   | For critical fixes that need to be deployed quickly | Can be merged directly to `production` in emergencies, then is backported to `staging` |
-| Short-lived | `chore-*`    | For maintenance tasks | Merged to `sandbox` when complete, then manually deleted |
-| Short-lived | `config-*`   | For configuration changes | Merged to `sandbox` when complete, then manually deleted |
-| Short-lived | `docs-*`     | For documentation updates | Merged to `sandbox` when complete, then manually deleted |
-| Short-lived | `test-*`     | For adding or updating tests | Merged to `sandbox` when complete, then manually deleted |
+| Short-lived | `feat-*`    | For developing new features | Merged to `sandbox` when complete, then deleted |
+| Short-lived | `fix-*`     | For fixing bugs | Merged to `sandbox` when complete, then deleted |
+| Short-lived | `docs-*`    | For documentation updates | Merged to `sandbox` when complete, then deleted |
+| Short-lived | `style-*`   | For code style changes (formatting, missing semi colons, etc.) | Merged to `sandbox` when complete, then deleted |
+| Short-lived | `refactor-*`| For code refactoring | Merged to `sandbox` when complete, then deleted |
+| Short-lived | `test-*`    | For adding or updating tests | Merged to `sandbox` when complete, then deleted |
+| Short-lived | `chore-*`   | For routine tasks or maintenance | Merged to `sandbox` when complete, then deleted |
+| Short-lived | `build-*`   | For changes that affect the build system or external dependencies | Merged to `sandbox` when complete, then deleted |
+| Short-lived | `ci-*`      | For changes to CI configuration files and scripts | Merged to `sandbox` when complete, then deleted |
+| Short-lived | `perf-*`    | For performance improvements | Merged to `sandbox` when complete, then deleted |
 | Temporary   | `release-v*` | Created for each release to staging or production | Created during release process, used for final review and applying changes, then deleted after successful apply |
 
 ### Branch Flow
@@ -117,14 +136,14 @@ Our branching strategy consists of long-lived branches, short-lived feature bran
 ```shell
 Time ----->
 
- feature-*   
- bugfix-*     
- hotfix-*        release-v1.0.0            release-v1.1.0
- chore-*         (sandbox to staging)      (staging to production)
- config-*              |                          |
- docs-*                |                          |
+ feat-*  
+ fix-*    
+ docs-*          release-v1.0.0            release-v1.1.0
+ style-*         (sandbox to staging)      (staging to production)
+ refactor-*            |                          |
  test-*                |                          |
-   |                   |                          |
+ ci-*                  |                          |
+ chore-*               |                          |
    |                   |                          |
    v                   v                          v
 +--------+        +--------+                 +--------+
