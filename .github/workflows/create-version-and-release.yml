@@ -95,6 +95,6 @@ jobs:
       - name: Create and push release branch
         id: create_release_branch
         run: |
-          git checkout -b release-${{ env.NEW_VERSION }}
-          git push origin release-${{ env.NEW_VERSION }}
+          git checkout -b release-${{ env.NEW_VERSION }}-to-${{ inputs.target_environment }}
+          git push origin release-${{ env.NEW_VERSION }}-to-${{ inputs.target_environment }}
 
