@@ -1,40 +1,40 @@
 resource "jamfpro_category" "jamfpro_category_001" {
-  name     = "tf-ghatest-operating-system"
+  name     = "tf-dw-ghatest-operating-system"
   priority = 10
 }
 
 resource "jamfpro_category" "jamfpro_category_002" {
-  name     = "tf-ghatest-self-service"
+  name     = "tf-dw-ghatest-self-service"
   priority = 10
 }
 
 resource "jamfpro_category" "jamfpro_category_003" {
-  name     = "tf-ghatest-security"
+  name     = "tf-dw-ghatest-security"
   priority = 10
 }
 
 resource "jamfpro_category" "jamfpro_category_004" {
-  name     = "tf-ghatest-network"
+  name     = "tf-dw-ghatest-network"
   priority = 10
 }
 
 resource "jamfpro_category" "jamfpro_category_005" {
-  name     = "tf-ghatest-applications"
+  name     = "tf-dw-ghatest-applications"
   priority = 10
 }
 
 resource "jamfpro_category" "jamfpro_category_006" {
-  name     = "tf-ghatest-user-experience"
+  name     = "tf-dw-ghatest-user-experience"
   priority = 10
 }
 
 resource "jamfpro_category" "jamfpro_category_007" {
-  name     = "tf-ghatest-user-management"
+  name     = "tf-dw-ghatest-user-management"
   priority = 10
 }
 
 resource "jamfpro_category" "jamfpro_category_008" {
-  name     = "tf-ghatest-device-management"
+  name     = "tf-dw-ghatest-device-management"
   priority = 10
 }
 
@@ -44,11 +44,11 @@ resource "jamfpro_category" "jamfpro_category_009" {
 }
 
 resource "jamfpro_category" "jamfpro_category_010" {
-  name     = "tf-ghatest-compliance"
+  name     = "tf-dw-ghatest-compliance"
   priority = 10
 }
 
 resource "jamfpro_category" "jamfpro_category_011" {
-  name     = "tf-ghatest-maintenance"
+  name     = "tf-dw-ghatest-maintenance"
   priority = 10
 }
