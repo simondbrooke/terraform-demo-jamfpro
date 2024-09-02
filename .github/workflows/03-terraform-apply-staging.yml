@@ -43,7 +43,7 @@ jobs:
     needs: [terraform-apply]
     uses: ./.github/workflows/branch-cleanup.yml
     with:
-      branch_name: release-${{ github.event.pull_request.head.ref }}-to-staging
+      branch_name: ${{ github.event.pull_request.head.ref }}
     secrets:
       PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
 
