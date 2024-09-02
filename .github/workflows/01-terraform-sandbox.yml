@@ -1,22 +1,26 @@
+# ref: https://sentenz.github.io/convention/convention/conventional-commits/
 name: "01 - terraform testing: sandbox"
 
 on:
   push:
     branches:
-      - 'feature-*'
-      - 'bugfix-*'
-      - 'hotfix-*'
-      - 'chore-*'
-      - 'config-*'
+      - 'feat-*'
+      - 'fix-*'
       - 'docs-*'
+      - 'style-*'
+      - 'refactor-*'
       - 'test-*'
-
+      - 'chore-*'
+      - 'build-*'
+      - 'ci-*'
+      - 'perf-*'
+      
   workflow_dispatch:
     inputs:
       branch_name:
-        description: 'Branch to promote to Sandbox (must start with feature-, bugfix-, hotfix-, chore-, config-, docs-, or test-)'
+        description: 'Branch to promote to Sandbox (must start with feat-, fix-, docs-, style-, refactor-, test-, chore-, build-, ci-, or perf-)'
         required: true
-        default: 'feature-'
+        default: 'feat-'
 
 env:
   TF_CLOUD_ORGANIZATION: "deploymenttheory"
@@ -36,13 +40,16 @@ jobs:
       github.repository != 'hashicorp-education/learn-terraform-github-actions' &&
       (
         github.event_name == 'workflow_dispatch' ||
-        startsWith(github.ref, 'refs/heads/feature-') ||
-        startsWith(github.ref, 'refs/heads/bugfix-') ||
-        startsWith(github.ref, 'refs/heads/hotfix-') ||
-        startsWith(github.ref, 'refs/heads/chore-') ||
-        startsWith(github.ref, 'refs/heads/config-') ||
+        startsWith(github.ref, 'refs/heads/feat-') ||
+        startsWith(github.ref, 'refs/heads/fix-') ||
         startsWith(github.ref, 'refs/heads/docs-') ||
-        startsWith(github.ref, 'refs/heads/test-')
+        startsWith(github.ref, 'refs/heads/style-') ||
+        startsWith(github.ref, 'refs/heads/refactor-') ||
+        startsWith(github.ref, 'refs/heads/test-') ||
+        startsWith(github.ref, 'refs/heads/chore-') ||
+        startsWith(github.ref, 'refs/heads/build-') ||
+        startsWith(github.ref, 'refs/heads/ci-') ||
+        startsWith(github.ref, 'refs/heads/perf-')
       )
     name: "Terraform Apply to Sandbox"
     runs-on: ubuntu-latest
@@ -55,7 +62,7 @@ jobs:
         run: |
           branch="${{ github.event.inputs.branch_name }}"
           if [[ ! "$branch" =~ ^(feature|bugfix|release|hotfix|chore|spike|config|docs|test)- ]]; then
-            echo "Error: Branch name must start with 'feature-', 'bugfix-', 'hotfix-', 'chore-', 'config-', 'docs-', or 'test-'"
+            echo "Error: Branch name must start with 'feat-', 'fix-', 'style-', 'chore-', 'config-', 'docs-', or 'test-'"
             exit 1
           fi
 
