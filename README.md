@@ -136,14 +136,14 @@ Our branching strategy consists of long-lived branches, short-lived feature bran
 ```shell
 Time ----->
 
- feature-*   
- bugfix-*     
- hotfix-*        release-v1.0.0            release-v1.1.0
- chore-*         (sandbox to staging)      (staging to production)
- config-*              |                          |
- docs-*                |                          |
+ feat-*  
+ fix-*    
+ docs-*          release-v1.0.0            release-v1.1.0
+ style-*         (sandbox to staging)      (staging to production)
+ refactor-*            |                          |
  test-*                |                          |
-   |                   |                          |
+ ci-*                  |                          |
+ chore-*               |                          |
    |                   |                          |
    v                   v                          v
 +--------+        +--------+                 +--------+
