@@ -38,6 +38,15 @@ jobs:
       debug: true
     secrets:
       TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+  
+  update-release:
+    needs: terraform-apply
+    uses: ./.github/workflows/update-release.yml
+    with:
+      branch_name: ${{ github.event.pull_request.head.ref }}
+      pull_request_number: ${{ github.event.pull_request.number }}
+      merged_at: ${{ github.event.pull_request.merged_at }}
+      merged_by: ${{ github.event.pull_request.merged_by.login }}
 
   branch-cleanup:
     needs: [terraform-apply]

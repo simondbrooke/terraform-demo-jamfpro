@@ -1,0 +1,47 @@
+name: Update Github Release
+
+on:
+  workflow_call:
+    inputs:
+      branch_name:
+        required: true
+        type: string
+      pull_request_number:
+        required: true
+        type: string
+      merged_at:
+        required: true
+        type: string
+      merged_by:
+        required: true
+        type: string
+
+jobs:
+  update-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.1.7
+
+      - name: Extract version from branch name
+        id: extract_version
+        run: |
+          BRANCH_NAME=${{ inputs.branch_name }}
+          VERSION=$(echo $BRANCH_NAME | sed -n 's/release-\(v.*\)-to-production/\1/p')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update GitHub Release
+        uses: softprops/action-gh-release@v2.0.8
+        with:
+          tag_name: ${{ steps.extract_version.outputs.VERSION }}
+          name: ${{ steps.extract_version.outputs.VERSION }} - Deployed to Production
+          body: |
+            🚀 This release has been successfully deployed to production.
+            📅 Deployment Date: ${{ inputs.merged_at }}
+            👤 Merged by: @${{ inputs.merged_by }}
+            🔗 Pull Request: https://github.com/${{ github.repository }}/pull/${{ inputs.pull_request_number }}
+          draft: false
+          prerelease: false
+          append_body: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
