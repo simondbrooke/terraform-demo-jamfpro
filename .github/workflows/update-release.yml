@@ -15,6 +15,9 @@ on:
       merged_by:
         required: true
         type: string
+      target_environment:
+        required: true
+        type: string
 
 jobs:
   update-release:
@@ -27,16 +30,16 @@ jobs:
         id: extract_version
         run: |
           BRANCH_NAME=${{ inputs.branch_name }}
-          VERSION=$(echo $BRANCH_NAME | sed -n 's/release-\(v.*\)-to-production/\1/p')
+          VERSION=$(echo $BRANCH_NAME | sed -n 's/release-\(v.*\)-to-${{ inputs.target_environment }}/\1/p')
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Update GitHub Release
         uses: softprops/action-gh-release@v2.0.8
         with:
           tag_name: ${{ steps.extract_version.outputs.VERSION }}
-          name: ${{ steps.extract_version.outputs.VERSION }} - Deployed to Production
+          name: ${{ steps.extract_version.outputs.VERSION }} - Deployed to ${{ inputs.target_environment }}
           body: |
-            🚀 This release has been successfully deployed to production.
+            🚀 This release has been successfully deployed to ${{ inputs.target_environment }}.
             📅 Deployment Date: ${{ inputs.merged_at }}
             👤 Merged by: @${{ inputs.merged_by }}
             🔗 Pull Request: https://github.com/${{ github.repository }}/pull/${{ inputs.pull_request_number }}

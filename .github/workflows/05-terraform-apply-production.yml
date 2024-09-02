@@ -47,6 +47,7 @@ jobs:
       pull_request_number: ${{ github.event.pull_request.number }}
       merged_at: ${{ github.event.pull_request.merged_at }}
       merged_by: ${{ github.event.pull_request.merged_by.login }}
+      target_environment: "production"
 
   branch-cleanup:
     needs: [terraform-apply]
