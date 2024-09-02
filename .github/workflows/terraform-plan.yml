@@ -19,7 +19,7 @@ on:
       config_directory:
         required: true
         type: string
-      new_version:
+      release_version:
         required: true
         type: string
     secrets:
@@ -41,7 +41,7 @@ jobs:
       - name: Checkout release branch
         uses: actions/checkout@v4.1.7
         with:
-          ref: release-${{ inputs.new_version }}
+          ref: ${{ inputs.release_version }}
           fetch-depth: 0
       
       - name: Set TF_API_TOKEN as environment variable
@@ -129,8 +129,8 @@ jobs:
             const { data: pullRequest } = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Terraform Plan for ${{ inputs.target_environment }} Release ${{ inputs.new_version }}`,
-              head: `release-${{ inputs.new_version }}`,
+              title: `Terraform Plan for ${{ inputs.target_environment }}: ${{ inputs.release_version }}`,
+              head: `${{ inputs.release_version }}`,
               base: '${{ inputs.target_environment }}',
               body: planSummary
             });

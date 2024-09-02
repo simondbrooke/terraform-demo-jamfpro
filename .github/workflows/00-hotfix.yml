@@ -1,0 +1,132 @@
+name: "Hotfix: Plan and Apply to Production"
+
+on:
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Debug mode'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
+
+jobs:
+  check-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if running on sandbox branch
+        if: github.ref != 'refs/heads/sandbox'
+        run: |
+          echo "Error: This workflow can only be run from the sandbox branch."
+          exit 1
+
+  create-hotfix-version-and-release:
+    needs: check-branch
+    uses: ./.github/workflows/create-version-and-release.yml
+    with:
+      source_environment: "sandbox"
+      target_environment: "production"
+      config_directory: "workload/terraform/jamfpro"
+      debug: ${{ inputs.debug }}
+
+  terraform-plan-production:
+    needs: create-hotfix-version-and-release
+    uses: ./.github/workflows/terraform-plan.yml
+    with:
+      tf_cloud_organization: "deploymenttheory"
+      tf_workspace: "terraform-jamfpro-production" 
+      target_environment: "production"
+      debug: ${{ inputs.debug }}
+      config_directory: "workload/terraform/jamfpro"
+      new_version: ${{ needs.create-hotfix-version-and-release.outputs.new_version }}
+    secrets:
+      TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+
+  manual-approval:
+    needs: terraform-plan-production
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Manual Approval for Hotfix
+        uses: trstringer/manual-approval@v1.9.1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: user1,user2,org-team1
+          minimum-approvals: 1
+          issue-title: "Approve Hotfix Deployment to Production"
+          issue-body: "A hotfix is ready to be applied to the production environment. Please review the Terraform plan and approve or deny this deployment."
+          exclude-workflow-initiator-as-approver: true
+          timeout-minutes: 60
+
+  terraform-apply-production:
+    needs: manual-approval
+    uses: ./.github/workflows/terraform-apply.yml
+    with:
+      tf_cloud_organization: "deploymenttheory"
+      tf_workspace: "terraform-jamfpro-production"
+      config_directory: "workload/terraform/jamfpro"
+      debug: true
+    secrets:
+      TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+
+  verify-production-deployment:
+    needs: terraform-apply-production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Production Deployment Status
+        run: |
+          if [ "${{ needs.terraform-apply-production.result }}" != "success" ]; then
+            echo "Production deployment failed. Stopping workflow."
+            exit 1
+          fi
+          echo "Production deployment successful. Proceeding with backport to staging."
+
+  manual-approval-for-staging:
+    needs: verify-production-deployment
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Manual Approval for Staging Backport
+        uses: trstringer/manual-approval@v1.9.1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: user1,user2,org-team1
+          minimum-approvals: 1
+          issue-title: "Approve Hotfix Backport to Staging"
+          issue-body: "The hotfix has been applied to production. Please approve to backport these changes to the staging environment."
+          exclude-workflow-initiator-as-approver: true
+          timeout-minutes: 60
+
+  backport-to-staging:
+    needs: manual-approval-for-staging
+    uses: ./.github/workflows/terraform-apply.yml
+    with:
+      tf_cloud_organization: "deploymenttheory"
+      tf_workspace: "terraform-jamfpro-staging"
+      config_directory: "workload/terraform/jamfpro"
+      debug: true
+    secrets:
+      TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+
+  branch-cleanup:
+    needs: [backport-to-staging]
+    uses: ./.github/workflows/branch-cleanup.yml
+    with:
+      branch_name: release-${{ needs.create-hotfix-version-and-release.outputs.new_version }}
+    secrets:
+      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+
+  send-notification:
+    needs: [terraform-apply-production, backport-to-staging]
+    if: always()
+    uses: ./.github/workflows/send-notification.yml
+    with:
+      environment: "Production and Staging (Hotfix)"
+      result: ${{ needs.terraform-apply-production.result == 'success' && needs.backport-to-staging.result == 'success' && 'success' || 'failure' }}
+      notification_channel: msteams
+      new_version: ${{ needs.create-hotfix-version-and-release.outputs.new_version }}
+    secrets: inherit
