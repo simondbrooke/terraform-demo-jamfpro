@@ -81,7 +81,6 @@ jobs:
             🚀 This release was manually triggered by @${{ github.actor }}.
             🔄 Source: ${{ inputs.source_environment }}
             🎯 Target: ${{ inputs.target_environment }}
-            💻 Commit: ${{ github.sha }}
             🔒 TF Configuration File Hash: ${{ env.CONFIG_HASH }}
           draft: false
           prerelease: false
