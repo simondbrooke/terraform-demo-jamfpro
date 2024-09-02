@@ -115,7 +115,6 @@ def parse_resource(content):
         elif current_resource and '=' in line:
             field, value = map(str.strip, line.split('=', 1))
             resources[current_resource][field] = value.rstrip(',')
-            print(f"  Field: {field} = {value.rstrip(',')}")
         elif line.strip() == '}':
             current_resource = None
     return resources
@@ -324,7 +323,7 @@ def determine_version_increment(config_directory):
         changes['patch'] = True
     if is_field_value_changed(changed_files, config_directory):
         changes['patch'] = True
-        
+
     if changes['major']:
         print("Major version increment: Significant changes detected.")
         return 'major'
