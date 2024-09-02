@@ -63,6 +63,7 @@ jobs:
           git config user.email github-actions@github.com
           git checkout -b release-${{ steps.get_release.outputs.release_version }}-to-production
           git push origin release-${{ steps.get_release.outputs.release_version }}-to-production
+      
 
   terraform-plan:
     needs: production-release
@@ -78,7 +79,7 @@ jobs:
       TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
   
   create-pr:
-    needs: terraform-plan
+    needs: [terraform-plan, production-release]
     uses: ./.github/workflows/create-pr.yml
     with:
       target_environment: "production"
