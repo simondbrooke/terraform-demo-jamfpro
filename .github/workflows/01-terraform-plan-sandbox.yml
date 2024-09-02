@@ -30,21 +30,6 @@ permissions:
   
 jobs:
   branch-check:
-    if: >
-      github.repository != 'hashicorp-education/learn-terraform-github-actions' &&
-      (
-        github.event_name == 'workflow_dispatch' ||
-        startsWith(github.ref, 'refs/heads/feat-') ||
-        startsWith(github.ref, 'refs/heads/fix-') ||
-        startsWith(github.ref, 'refs/heads/docs-') ||
-        startsWith(github.ref, 'refs/heads/style-') ||
-        startsWith(github.ref, 'refs/heads/refactor-') ||
-        startsWith(github.ref, 'refs/heads/test-') ||
-        startsWith(github.ref, 'refs/heads/chore-') ||
-        startsWith(github.ref, 'refs/heads/build-') ||
-        startsWith(github.ref, 'refs/heads/ci-') ||
-        startsWith(github.ref, 'refs/heads/perf-')
-      )
     name: "branch check"
     runs-on: ubuntu-latest
     steps:
@@ -58,7 +43,10 @@ jobs:
       - name: Validate Branch Name
         run: |
           branch="${{ steps.extract_branch.outputs.branch }}"
-          if [[ ! "$branch" =~ ^(feat|fix|docs|style|refactor|test|chore|build|ci|perf)- ]]; then
+          if [[ "$branch" =~ ^(feat|fix|docs|style|refactor|test|chore|build|ci|perf)- ]]; then
+            echo "Success: Branch name '$branch' is valid."
+            exit 0
+          else
             echo "Error: Branch name must start with 'feat-', 'fix-', 'docs-', 'style-', 'refactor-', 'test-', 'chore-', 'build-', 'ci-', or 'perf-'"
             exit 1
           fi
