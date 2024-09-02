@@ -1,4 +1,4 @@
-name: "02 - Terraform Apply: Sandbox"
+name: "02 - terraform apply to: sandbox"
 
 on:
   pull_request:
@@ -12,8 +12,7 @@ env:
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
   TF_WORKSPACE: "terraform-jamfpro-sandbox"
   CONFIG_DIRECTORY: "workload/terraform/jamfpro"
-  PIPELINE_DEBUG: "true"
-  # other env vars are set within tfcloud directly for within the tf workspace
+  PIPELINE_DEBUG: true
 
 permissions:
   pull-requests: write  # required to update PR
