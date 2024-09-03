@@ -28,7 +28,7 @@ jobs:
           }
 
   terraform-apply:
-    uses: ./.github/workflows/jobs/terraform-apply.yml
+    uses: ./.github/workflows/terraform-apply.yml
     if: github.event.pull_request.merged == true
     needs: check-branch
     with:
@@ -41,7 +41,7 @@ jobs:
 
   update-release:
     needs: [terraform-apply]
-    uses: ./.github/workflows/jobs/update-release.yml
+    uses: ./.github/workflows/update-release.yml
     with:
       branch_name: ${{ github.event.pull_request.head.ref }}
       pull_request_number: ${{ github.event.pull_request.number }}
@@ -51,7 +51,7 @@ jobs:
 
   branch-cleanup:
     needs: [update-release]
-    uses: ./.github/workflows/jobs/branch-cleanup.yml
+    uses: ./.github/workflows/branch-cleanup.yml
     with:
       branch_name: ${{ github.event.pull_request.head.ref }}
     secrets:
@@ -60,7 +60,7 @@ jobs:
   send-notification:
     needs: [terraform-apply, update-release]
     if: ${{ always() && needs.terraform-apply.result != 'skipped' }}
-    uses: ./.github/workflows/jobs/send-notification.yml
+    uses: ./.github/workflows/send-notification.yml
     with:
       environment: "Staging"
       result: ${{ needs.terraform-apply.result == 'success' && 'success' || 'failure' }}

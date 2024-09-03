@@ -69,7 +69,7 @@ jobs:
           fi
 
   terraform-plan:
-    uses: ./.github/workflows/jobs/terraform-plan.yml
+    uses: ./.github/workflows/terraform-plan.yml
     with:
       tf_cloud_organization: "deploymenttheory"
       tf_workspace: "terraform-jamfpro-sandbox" 
