@@ -2,7 +2,23 @@
 name: "01 - terraform speculative plan: sandbox"
 
 on:
+  workflow_dispatch:
   push:
+    branches:
+      - 'feat-*'
+      - 'fix-*'
+      - 'docs-*'
+      - 'style-*'
+      - 'refactor-*'
+      - 'test-*'
+      - 'chore-*'
+      - 'build-*'
+      - 'ci-*'
+      - 'perf-*'
+    paths:
+      - '**/*.tf'
+  pull_request:
+    types: [opened, synchronize, reopened]
     branches:
       - 'feat-*'
       - 'fix-*'
@@ -30,6 +46,7 @@ permissions:
   
 jobs:
   branch-check:
+    if: github.event_name == 'workflow_dispatch' # only need to check branch for manual triggers
     name: "branch check"
     runs-on: ubuntu-latest
     steps:
@@ -52,14 +69,54 @@ jobs:
           fi
 
   terraform-plan:
-    needs: branch-check
-    uses: ./.github/workflows/terraform-plan.yml
+    uses: ./.github/workflows/jobs/terraform-plan.yml
     with:
       tf_cloud_organization: "deploymenttheory"
       tf_workspace: "terraform-jamfpro-sandbox" 
       target_environment: "sandbox"
       debug: true
       config_directory: "workload/terraform/jamfpro"
-      release_version: ${{ needs.branch-check.outputs.branch_name }}
+      release_version: ${{ github.ref_name }}
     secrets:
       TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+  
+  update-pr:
+    if: github.event_name == 'pull_request' # only run this for PRs
+    needs: terraform-plan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update PR
+        uses: actions/github-script@v6
+        id: plan-comment
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // 1. Retrieve existing bot comments for the PR
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const botComment = comments.find(comment => {
+              return comment.user.type === 'Bot' && comment.body.includes('HCP Terraform Plan Output')
+            });
+            const output = `#### HCP Terraform Plan Output
+                \`\`\`
+                Plan: ${{ needs.terraform-plan.outputs.add }} to add, ${{ needs.terraform-plan.outputs.change }} to change, ${{ needs.terraform-plan.outputs.destroy }} to destroy.
+                \`\`\`
+                [HCP Terraform Plan](${{ needs.terraform-plan.outputs.run_link }})
+                `;
+            // 3. Delete previous comment so PR timeline makes sense
+            if (botComment) {
+              github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+              });
+            }
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
