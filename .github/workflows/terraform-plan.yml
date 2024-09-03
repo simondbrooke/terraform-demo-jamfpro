@@ -26,6 +26,9 @@ on:
       plan_id:
         description: "The ID of the Terraform plan"
         value: ${{ jobs.terraform-plan.outputs.plan_id }}
+      plan_output:
+        description: "The output of the Terraform plan"
+        value: ${{ jobs.terraform-plan.outputs.plan_output  }}
       add:
         description: "Number of resources to add"
         value: ${{ jobs.terraform-plan.outputs.add }}
@@ -112,3 +115,4 @@ jobs:
         id: plan-output
         with:
           plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
+      
