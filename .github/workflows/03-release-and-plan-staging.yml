@@ -29,7 +29,7 @@ jobs:
           
   create-version-and-release:
     needs: check-branch
-    uses: ./.github/workflows/jobs/create-version-and-release.yml
+    uses: ./.github/workflows/create-version-and-release.yml
     with:
       source_environment: "sandbox"
       target_environment: "staging"
@@ -38,7 +38,7 @@ jobs:
 
   terraform-plan:
     needs: create-version-and-release
-    uses: ./.github/workflows/jobs/terraform-plan.yml
+    uses: ./.github/workflows/terraform-plan.yml
     with:
       tf_cloud_organization: "deploymenttheory"
       tf_workspace: "terraform-jamfpro-staging" 
@@ -51,7 +51,7 @@ jobs:
 
   create-pr:
     needs: [create-version-and-release, terraform-plan]
-    uses: ./.github/workflows/jobs/create-pr.yml
+    uses: ./.github/workflows/create-pr.yml
     with:
       target_environment: "staging"
       release_version: release-${{ needs.create-version-and-release.outputs.new_version }}-to-staging
@@ -65,7 +65,7 @@ jobs:
   send-notification:
     needs: [create-version-and-release, terraform-plan, create-pr]
     if: always()
-    uses: ./.github/workflows/jobs/send-notification.yml
+    uses: ./.github/workflows/send-notification.yml
     with:
       environment: "staging"
       result: ${{ needs.terraform-plan.result == 'success' && needs.create-pr.result == 'success' && 'success' || 'failure' }}

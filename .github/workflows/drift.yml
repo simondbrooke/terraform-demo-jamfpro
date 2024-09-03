@@ -89,7 +89,7 @@ jobs:
     strategy:
       matrix:
         environment: [sandbox, staging, production]
-    uses: ./.github/workflows/jobs/send-notification.yml
+    uses: ./.github/workflows/send-notification.yml
     with:
       environment: "${{ matrix.environment }}"
       result: "${{ needs.detect-and-correct-drift.outputs.result_message }}"
