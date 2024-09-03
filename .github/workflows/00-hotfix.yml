@@ -29,7 +29,7 @@ jobs:
 
   create-hotfix-version-and-release:
     needs: check-branch
-    uses: ./.github/workflows/create-version-and-release.yml
+    uses: ./.github/workflows/jobs/create-version-and-release.yml
     with:
       source_environment: "sandbox"
       target_environment: "production"
@@ -38,7 +38,7 @@ jobs:
 
   terraform-plan-production:
     needs: create-hotfix-version-and-release
-    uses: ./.github/workflows/terraform-plan.yml
+    uses: ./.github/workflows/jobs/terraform-plan.yml
     with:
       tf_cloud_organization: "deploymenttheory"
       tf_workspace: "terraform-jamfpro-production" 
@@ -68,7 +68,7 @@ jobs:
 
   terraform-apply-production:
     needs: manual-approval
-    uses: ./.github/workflows/terraform-apply.yml
+    uses: ./.github/workflows/jobs/terraform-apply.yml
     with:
       tf_cloud_organization: "deploymenttheory"
       tf_workspace: "terraform-jamfpro-production"
@@ -108,7 +108,7 @@ jobs:
 
   backport-to-staging:
     needs: manual-approval-for-staging
-    uses: ./.github/workflows/terraform-apply.yml
+    uses: ./.github/workflows/jobs/terraform-apply.yml
     with:
       tf_cloud_organization: "deploymenttheory"
       tf_workspace: "terraform-jamfpro-staging"
@@ -119,7 +119,7 @@ jobs:
 
   branch-cleanup:
     needs: [backport-to-staging]
-    uses: ./.github/workflows/branch-cleanup.yml
+    uses: ./.github/workflows/jobs/branch-cleanup.yml
     with:
       branch_name: release-${{ needs.create-hotfix-version-and-release.outputs.new_version }}
     secrets:
@@ -128,7 +128,7 @@ jobs:
   send-notification:
     needs: [terraform-apply-production, backport-to-staging]
     if: always()
-    uses: ./.github/workflows/send-notification.yml
+    uses: ./.github/workflows/jobs/send-notification.yml
     with:
       environment: "Production and Staging (Hotfix)"
       result: ${{ needs.terraform-apply-production.result == 'success' && needs.backport-to-staging.result == 'success' && 'success' || 'failure' }}
