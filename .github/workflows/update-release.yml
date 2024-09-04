@@ -27,6 +27,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.1.7
+        
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.9.1
+        with:
+          egress-policy: audit
 
       - name: Extract version from branch name
         id: extract_version
