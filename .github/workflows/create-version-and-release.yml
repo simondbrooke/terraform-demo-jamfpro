@@ -36,6 +36,11 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ inputs.source_environment }}
+          
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.9.1
+        with:
+          egress-policy: audit
 
       - name: Set up Python
         uses: actions/setup-python@v5.2.0
