@@ -17,6 +17,10 @@ on:
       - 'perf-*'
     paths:
       - '**/*.tf'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - 'sandbox'
 
 env:
   TF_CLOUD_ORGANIZATION: "deploymenttheory"
