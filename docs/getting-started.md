@@ -394,19 +394,3 @@ This automated process ensures consistent versioning, provides a clear history o
 14. **Promote to Production**: Repeat the process for promoting to Production by manually triggering the `04-release-and-plan-production.yml` workflow and approving the pull request to merge the release branch into the `production` branch after change review.
 
 15. **Apply to Production**: After the pull request is merged, the `05-terraform-apply-production.yml` workflow will automatically run to apply the changes to the Production environment.
-
-## Example Terraform Resource
-
-Below is an example of defining a building in Jamf Pro using Terraform:
-
-```hcl
-resource "jamfpro_building" "example_building" {
-  name            = "Example Building"
-  street_address1 = "123 Example St"
-  street_address2 = "Suite 100"
-  city            = "Example City"
-  state_province  = "Example State"
-  zip_postal_code = "12345"
-  country         = "Example Country"
-}
-```
