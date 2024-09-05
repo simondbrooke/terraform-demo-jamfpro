@@ -58,7 +58,7 @@ terraform --version
 ```
 
 
-
+## Project Setup
 
 1. **Create a New Repository**: Start by forking or cloning this repository into your GitHub account.
 2. **Clone and Push to Your New Repository**: If cloning then take a local copy of this repo and then push it to your newly created repository:
@@ -72,9 +72,74 @@ git push -u origin main
 
 Replace your-username and your-new-repo with your GitHub username and the name of your new repository.
 
+2. **Configure Terraform Cloud Workspaces**: 
+
+To manage your Jamf Pro infrastructure across different environments, you'll need to set up workspaces in Terraform Cloud. Follow these steps:
+
+- **Create Project**:
+   Create a new project in Terraform Cloud for your Jamf Pro infrastructure.
+
+- **Create Workspaces**:
+
+  Assigned to your project Create three workspaces in Terraform Cloud:
+
+   - `terraform-jamfpro-sandbox`
+   - `terraform-jamfpro-staging`
+   - `terraform-jamfpro-production`
+
+   Use `API-driven workflow` for each workspace.
+
+- **Tag Workspaces**:
+   Tag each of these workspaces with the "jamfpro" tag. This allows you to easily identify and group these workspaces.
+
+- **Set Up Variable Set for Common Variables**:
+   Create a variable set for variables that are common across all environments, set the following variables as `Terraform variable`:
+   
+   a. In Terraform Cloud, go to your organization settings.
+   b. Click on "Variable sets" and then "Create variable set".
+   c. Name it something like "Jamf Pro Common Variables".
+   d. Add the following variables:
+      - `enable_client_sdk_logs`: Set to "false"
+      - `client_sdk_log_export_path`: Set to "" - empty
+      - `jamfpro_jamf_load_balancer_lock`: Set to "true"
+      - `jamfpro_token_refresh_buffer_period_seconds`: Set to "100"
+      - `jamfpro_mandatory_request_delay_milliseconds`: Set to "300"
+   f. Apply this variable set to all three Jamf Pro workspaces.
+
+- **Configure Workspace-Specific Variables**:
+   For each workspace, set the following variables as `Terraform variable`:
+
+   a. Go to the workspace settings in Terraform Cloud.
+   b. Navigate to the "Variables" section.
+   c. Add the following variables:
+      - `jamfpro_instance_fqdn`: The FQDN of your Jamf Pro instance for this environment.
+      - `jamfpro_client_id`: Your Jamf Pro client ID (for OAuth2)
+      - `jamfpro_client_secret`: Your Jamf Pro client secret (for OAuth2)
+      - `jamfpro_basic_auth_username`: Your Jamf Pro username (for basic auth)
+      - `jamfpro_basic_auth_password`: Your Jamf Pro password (for basic auth)
+   d. Mark sensitive variables (like passwords and secrets) as sensitive.
+
+- **Access Controls**:
+   Set up appropriate access controls for each workspace:
+   
+   a. Go to the "Team Access" section in each workspace's settings.
+   b. Assign the appropriate permissions to team members based on their roles and the environment.
+   c. Consider restricting access to production workspaces to a smaller group of trusted team members.
+
+6. **Version Control Settings**:
+   Configure version control settings for each workspace:
+   
+   a. Go to the "Version Control" section in the workspace settings.
+   b. Connect the workspace to your GitHub repository.
+   c. Set the VCS branch to match your environment branches (e.g., "sandbox", "staging", "production").
+
+Remember, keeping your Terraform Cloud configuration secure is crucial. Always use environment variables for sensitive information, and never commit secrets to your version control system.
+
+By following these steps, you'll have a well-organized and secure setup in Terraform Cloud, with proper separation between environments and efficient management of common variables.
+
 3. **Configure Github Secrets**: Set up the following secrets in your GitHub repository settings:
 
-- `TF_API_TOKEN`: Your Terraform Cloud API token for Terraform Cloud backend.
+- `TF_API_TOKEN`: Your Terraform Cloud API token for Terraform Cloud backend. this can be generated from the Terraform Cloud UI under account settings -> Tokens -> create api token.
 - `PAT_TOKEN`: Your GitHub Personal Access Token for branch management operations.
 
 To set up the PAT_TOKEN:
@@ -130,7 +195,7 @@ These webhook URLs are used in the Send Notification workflow (send-notification
 
    Note: For Terraform Cloud, when setting variables you do not need to prefix your env vars with `TF_VAR_` as Terraform Cloud automatically does this for you. Additionally, ensure to select the variable category as `Terraform variable`, with the HCL tickbox unchecked.
 
-4. **Update Terraform Variables**: Modify the `terraform` block in your `.tf` files to match your Jamf Pro instance details. For example:
+5. **Update Terraform Variables**: Modify the `terraform` block in your `.tf` files to match your Jamf Pro instance details. For example:
 
    ```hcl
    provider "jamfpro" {
@@ -152,7 +217,7 @@ These webhook URLs are used in the Send Notification workflow (send-notification
 
    It's strongly recommended for beginners to ensure that `jamfpro_load_balancer_lock` is set to true, to avoid any issues with the Jamf Pro load balancer.
 
-5. **Backend Configuration**: For our multi-environment setup, we'll be using Terraform workspaces. This approach allows us to use a single set of configuration files while maintaining separate states for each environment. Here's how to structure it:
+6. **Backend Configuration**: For our multi-environment setup, we'll be using Terraform workspaces. This approach allows us to use a single set of configuration files while maintaining separate states for each environment. Here's how to structure it:
 
    In your main Terraform configuration file (e.g., `main.tf`):
 
@@ -169,26 +234,6 @@ These webhook URLs are used in the Send Notification workflow (send-notification
 
    This configuration tells Terraform to use Terraform Cloud with the "deploymenttheory" organization and to work with any workspace tagged with "jamfpro".
 
-   In Terraform Cloud:
-   1. Create three workspaces:
-      - `terraform-jamfpro-sandbox`
-      - `terraform-jamfpro-staging`
-      - `terraform-jamfpro-production`
-   2. Tag each of these workspaces with the "jamfpro" tag.
-   3. Set workspace-specific variables in Terraform Cloud for each environment. For example, you might have a variable `environment` set to "sandbox", "staging", or "production" in the respective workspaces.
-
-   In your Terraform configuration, you can then use these workspace-specific variables to customize resources for each environment. For example:
-
-   ```hcl
-   resource "jamfpro_building" "example" {
-     name = "Building-${var.environment}"
-     // other attributes...
-   }
-   ```
-
-   This approach ensures that each environment has its own isolated state in Terraform Cloud while allowing you to use a single set of configuration files. It provides flexibility in managing environment-specific configurations through Terraform Cloud workspace variables.
-
-   Remember to set up appropriate access controls and variable values for each workspace in Terraform Cloud to maintain proper separation between environments.
 
 6. **Terraform Provider Configuration**: Specify the provider source and version:
 
