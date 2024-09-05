@@ -88,7 +88,15 @@ Each environment has its own Terraform Cloud workspace:
    
    This follows the [Conventional Commits](https://sentenz.github.io/convention/convention/conventional-commits/) specification for commit messages. These branches are merged into the `sandbox` branch for testing.
 
-2. Changes are automatically checked for linting and formatting as well as Terraform planned against the Sandbox environment when pushed from these branches to sandbox by `01-terraform-plan-sandbox.yml`.
+2. Automated Terraform Planning and PR Management:
+
+   Upon pushing changes to branches matching patterns like feat-*, fix-*, ci-*, etc., the `01-terraform-plan-sandbox.yml` workflow is triggered automatically.
+   This workflow performs the following actions:
+   a. Runs a Terraform speculative plan against the Sandbox environment.
+   b. Automatically creates a new Pull Request (PR) to the sandbox branch if one doesn't exist, or updates an existing PR.
+   c. Adds or updates a comment in the PR with the results of the Terraform plan, including the number of resources to be added, changed, or destroyed.
+   d. Provides a link to the full plan details in Terraform Cloud within the PR comment.
+   This process ensures that every push to a feature branch is automatically checked, planned, and documented, facilitating easier review and understanding of proposed changes before merging into the sandbox branch.
 
 3. Once all desired changes have been tested, the short-lived branch is PR'd into the sandbox branch.
    Once merged into the sandbox branch, the changes are automatically applied to the Sandbox environment by `02-terraform-apply-sandbox.yml`.
