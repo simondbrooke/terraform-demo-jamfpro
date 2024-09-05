@@ -99,11 +99,13 @@ To manage your Jamf Pro infrastructure across different environments, you'll nee
    b. Click on "Variable sets" and then "Create variable set".
    c. Name it something like "Jamf Pro Common Variables".
    d. Add the following variables:
-      - `enable_client_sdk_logs`: Set to "false"
-      - `client_sdk_log_export_path`: Set to "" - empty
-      - `jamfpro_jamf_load_balancer_lock`: Set to "true"
-      - `jamfpro_token_refresh_buffer_period_seconds`: Set to "100"
-      - `jamfpro_mandatory_request_delay_milliseconds`: Set to "300"
+
+    - `enable_client_sdk_logs`: Set to "false"
+    - `client_sdk_log_export_path`: Set to "" - empty
+    - `jamfpro_jamf_load_balancer_lock`: Set to "true"
+    - `jamfpro_token_refresh_buffer_period_seconds`: Set to "100"
+    - `jamfpro_mandatory_request_delay_milliseconds`: Set to "300"
+
    f. Apply this variable set to all three Jamf Pro workspaces.
 
 - **Configure Workspace-Specific Variables**:
@@ -112,11 +114,13 @@ To manage your Jamf Pro infrastructure across different environments, you'll nee
    a. Go to the workspace settings in Terraform Cloud.
    b. Navigate to the "Variables" section.
    c. Add the following variables:
-      - `jamfpro_instance_fqdn`: The FQDN of your Jamf Pro instance for this environment.
-      - `jamfpro_client_id`: Your Jamf Pro client ID (for OAuth2)
-      - `jamfpro_client_secret`: Your Jamf Pro client secret (for OAuth2)
-      - `jamfpro_basic_auth_username`: Your Jamf Pro username (for basic auth)
-      - `jamfpro_basic_auth_password`: Your Jamf Pro password (for basic auth)
+
+    - `jamfpro_instance_fqdn`: The FQDN of your Jamf Pro instance for this environment.
+    - `jamfpro_client_id`: Your Jamf Pro client ID (for OAuth2)
+    - `jamfpro_client_secret`: Your Jamf Pro client secret (for OAuth2)
+    - `jamfpro_basic_auth_username`: Your Jamf Pro username (for basic auth)
+    - `jamfpro_basic_auth_password`: Your Jamf Pro password (for basic auth)
+
    d. Mark sensitive variables (like passwords and secrets) as sensitive.
 
 - **Access Controls**:
@@ -149,11 +153,13 @@ c. Give your token a descriptive name, e.g., "Terraform Jamf Pro Config Branch M
 d. Set the expiration as per your security policies.
 e. Under "Repository access", select "Only select repositories" and choose the repository you're setting up.
 f. Under "Permissions", grant the following permissions:
+
 - Repository permissions:
 - Contents: Read and write (This allows branch management)
 - Metadata: Read-only (This is required for API operations)
 - Organization permissions:
 - Members: Read-only (If working within an organization)
+
 g. Click "Generate token" and copy the token immediately.
 h. In your repository, go to Settings > Secrets and variables > Actions.
 i. Click "New repository secret", name it PAT_TOKEN, and paste your token as the value.
