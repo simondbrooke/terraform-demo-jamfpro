@@ -1,5 +1,5 @@
 # resource "jamfpro_policy" "jamfpro_package_policy_001" {
-#   name                          = "tf-ghatest-policy-packages-suspiciouspackage"
+#   name                          = "tf-demo-policy-packages-suspiciouspackage"
 #   enabled                       = false
 #   trigger_checkin               = false
 #   trigger_enrollment_complete   = false

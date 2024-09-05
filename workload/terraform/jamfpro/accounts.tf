@@ -1,6 +1,6 @@
 
 # resource "jamfpro_account" "jamf_pro_account_001" {
-#   name                  = "tf-ghapipeline-account-custom-privileges-full-access"
+#   name                  = "tf-demo-account-custom-privileges-full-access"
 #   directory_user        = false
 #   full_name             = "micky mouse"
 #   password              = "mySecretThing10" // Password must be at least 10 characters long. password not stored in state

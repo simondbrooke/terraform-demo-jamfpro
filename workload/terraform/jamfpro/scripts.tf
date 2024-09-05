@@ -1,5 +1,5 @@
 resource "jamfpro_script" "jamfpro_script_001" {
-  name            = "tf-dw-ghatest-correct-application-permissions-v1.0"
+  name            = "tf-demo-correct-application-permissions-v1.0"
   script_contents = file("${path.module}/support_files/scripts/Correct Application Permissions.sh")
   os_requirements = "13"
   priority        = "BEFORE"
@@ -9,7 +9,7 @@ resource "jamfpro_script" "jamfpro_script_001" {
 }
 
 # resource "jamfpro_script" "jamfpro_script_002" {
-#   name            = "tf-dw-ghatest-encrypt-apfs-volume-v5.0.1"
+#   name            = "tf-demo-encrypt-apfs-volume-v5.0.1"
 #   script_contents = file("${path.module}/support_files/scripts/Encrypt_APFS_Volume.zsh")
 #   os_requirements = "13"
 #   priority        = "BEFORE"
@@ -19,7 +19,7 @@ resource "jamfpro_script" "jamfpro_script_001" {
 # }
 
 # resource "jamfpro_script" "jamfpro_script_003" {
-#   name            = "tf-dw-ghatest-reset-safari-v2.1.4"
+#   name            = "tf-demo-reset-safari-v2.1.4"
 #   script_contents = file("${path.module}/support_files/scripts/Reset_Safari.sh")
 #   os_requirements = "15"
 #   priority        = "BEFORE"
@@ -28,7 +28,7 @@ resource "jamfpro_script" "jamfpro_script_001" {
 # }
 
 # resource "jamfpro_script" "jamfpro_script_004" {
-#   name            = "tf-dw-ghatest-update-jamf-pro-inventory-and-set-logged-in-user-as-associated-user-v2.1.4"
+#   name            = "tf-demo-update-jamf-pro-inventory-and-set-logged-in-user-as-associated-user-v2.1.4"
 #   script_contents = file("${path.module}/support_files/scripts/Update Jamf Pro Inventory and Set Logged-In User as Associated User.sh")
 #   os_requirements = "15"
 #   priority        = "BEFORE"
