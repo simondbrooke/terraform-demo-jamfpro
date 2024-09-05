@@ -85,7 +85,8 @@ jobs:
                 title: `Terraform Plan for ${{ inputs.target_environment }}: ${{ inputs.release_version }}`,
                 head: branchName,
                 base: '${{ inputs.target_environment }}',
-                body: planSummary
+                body: planSummary,
+                merge_method: 'squash'
               });
 
               console.log(`Successfully created PR: ${pullRequest.html_url}`);
