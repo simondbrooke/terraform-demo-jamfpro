@@ -87,7 +87,7 @@ To manage your Jamf Pro infrastructure across different environments, you'll nee
    - `terraform-jamfpro-staging`
    - `terraform-jamfpro-production`
 
-    These workspaces will correspond to your Sandbox, Staging, and Production environments, respectively.
+   Use `API-driven workflow` for each workspace.
 
 - **Tag Workspaces**:
    Tag each of these workspaces with the "jamfpro" tag. This allows you to easily identify and group these workspaces.
@@ -139,7 +139,7 @@ By following these steps, you'll have a well-organized and secure setup in Terra
 
 3. **Configure Github Secrets**: Set up the following secrets in your GitHub repository settings:
 
-- `TF_API_TOKEN`: Your Terraform Cloud API token for Terraform Cloud backend.
+- `TF_API_TOKEN`: Your Terraform Cloud API token for Terraform Cloud backend. this can be generated from the Terraform Cloud UI under account settings -> Tokens -> create api token.
 - `PAT_TOKEN`: Your GitHub Personal Access Token for branch management operations.
 
 To set up the PAT_TOKEN:
