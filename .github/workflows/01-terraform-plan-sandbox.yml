@@ -70,7 +70,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create or Update PR
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -103,10 +103,11 @@ jobs:
             }
             
             // Add Terraform plan results to PR
-            const planOutput = `Terraform Plan Results:
+            const planOutput = `#### Terraform Plan Results
             \`\`\`
-            # Add actual plan output here
+            Plan: ${{ needs.terraform-plan.outputs.add }} to add, ${{ needs.terraform-plan.outputs.change }} to change, ${{ needs.terraform-plan.outputs.destroy }} to destroy.
             \`\`\`
+            [View full plan details](${{ needs.terraform-plan.outputs.run_link }})
             `;
             
             await github.rest.issues.createComment({
