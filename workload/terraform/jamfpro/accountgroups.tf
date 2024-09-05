@@ -1,7 +1,7 @@
 
 # // account group - custom example
 # resource "jamfpro_account_group" "jamfpro_account_group_001" {
-#   name          = "tf-ghatest-accountgroup-custom"
+#   name          = "tf-demo-accountgroup-custom"
 #   access_level  = "Full Access" // Full Access / Site Access / Group Access
 #   privilege_set = "Custom"
 

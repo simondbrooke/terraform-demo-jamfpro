@@ -1,6 +1,6 @@
 # resource "jamfpro_user_group" "jamfpro_user_group_multi" {
 #   count               = 50
-#   name                = format("tf-localtest-usergroup-static-loadtest-%03d", count.index + 1)
+#   name                = format("tf-demo-usergroup-static-loadtest-%03d", count.index + 1)
 #   is_smart            = false
 #   is_notify_on_change = false
 
@@ -17,7 +17,7 @@
 
 
 # resource "jamfpro_user_group" "jamfpro_user_group_002" {
-#   name                = "tf-dw-ghatest-usergroup-smart"
+#   name                = "tf-demo-usergroup-smart"
 #   is_smart            = true
 #   is_notify_on_change = true
 
