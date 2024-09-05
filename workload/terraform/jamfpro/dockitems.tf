@@ -1,18 +1,18 @@
 
 resource "jamfpro_dock_item" "jamfpro_dock_item_001" {
-  name = "tf-dw-ghatest-dockItem-app-iTunes"
+  name = "tf-demo-dockItem-app-iTunes"
   type = "App"
   path = "file://localhost/Applications/iTunes.app/"
 }
 
 resource "jamfpro_dock_item" "jamfpro_dock_item_002" {
-  name = "tf-dw-ghatest-dockItem-file-hosts"
+  name = "tf-demo-dockItem-file-hosts"
   type = "File" // App / File / Folder
   path = "/etc/hosts"
 }
 
 resource "jamfpro_dock_item" "jamfpro_dock_item_003" {
-  name = "tf-dw-ghatest-dockItem-folder-downloadsFolder"
+  name = "tf-demo-dockItem-folder-downloadsFolder"
   type = "Folder" // App / File / Folder
   path = "~/Downloads"
 }

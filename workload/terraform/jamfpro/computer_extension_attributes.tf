@@ -1,7 +1,7 @@
 
 
 resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_001" {
-  name        = "tf-ghatest-cexa-popup-menu-example"
+  name        = "tf-demo-cexa-popup-menu-example"
   enabled     = true
   description = "An attribute collected from a pop-up menu."
 
@@ -13,7 +13,7 @@ resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_00
 }
 
 # resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_002" {
-#   name        = "tf-example-cexa-text-field-example"
+#   name        = "tf-demo-cexa-text-field-example"
 #   enabled     = true
 #   description = "An attribute collected from a text field."
 
@@ -22,7 +22,7 @@ resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_00
 # }
 
 # resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_003" {
-#   name         = "tf-example-cexa-hello-world"
+#   name         = "tf-demo-cexa-hello-world"
 #   enabled      = true
 #   description  = "An attribute collected via a script."
 #   input_type   = "script"
@@ -32,7 +32,7 @@ resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_00
 # }
 
 # resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_004" {
-#   name         = "tf-example-cexa-system_extensions"
+#   name         = "tf-demo-cexa-system_extensions"
 #   enabled      = true
 #   description  = "An attribute collected via a script."
 #   input_type   = "script"

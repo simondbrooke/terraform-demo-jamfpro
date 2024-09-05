@@ -1,5 +1,5 @@
 # resource "jamfpro_smart_computer_group" "smart_computer_group_001" {
-#   name = "tf-ghatest-computergroup-operating-system-like-macos-14"
+#   name = "tf-demo-computergroup-operating-system-like-macos-14"
 
 #   // optional
 #   site_id = -1
@@ -25,7 +25,7 @@
 # }
 
 # resource "jamfpro_smart_computer_group" "smart_computer_group_002" {
-#   name = "tf-ghatest-non_compliant_macs"
+#   name = "tf-demo-non_compliant_macs"
 
 #   site_id = -1
 #   criteria {
@@ -58,7 +58,7 @@
 # }
 
 # resource "jamfpro_smart_computer_group" "smart_computer_group_003" {
-#   name = "tf-ghatest-has_microsoft_word_less_than_16.50"
+#   name = "tf-demo-has_microsoft_word_less_than_16.50"
 
 #   site_id = -1
 #   criteria {
