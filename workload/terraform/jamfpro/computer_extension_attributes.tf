@@ -1,42 +1,42 @@
-
-
-resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_001" {
-  name        = "tf-demo-cexa-popup-menu-example"
-  enabled     = true
-  description = "An attribute collected from a pop-up menu."
-
-  input_type  = "Pop-up Menu"
-  input_popup = ["Option 1", "Option 2", "Option 3"]
-
-
-  inventory_display = "User and Location"
+# Pop-up Menu Example
+resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_popup_menu_1" {
+  name                   = "tf-ghatest-popup-menu-example"
+  enabled                = true
+  description            = "An attribute collected from a pop-up menu."
+  input_type             = "POPUP"
+  popup_menu_choices     = ["Option 1", "Option 2", "Option 3"]
+  inventory_display_type = "USER_AND_LOCATION"
+  data_type              = "STRING"
 }
 
-# resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_002" {
-#   name        = "tf-demo-cexa-text-field-example"
-#   enabled     = true
-#   description = "An attribute collected from a text field."
+# Text Field Example
+resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_text_field_1" {
+  name                   = "tf-ghatest-text-field-example"
+  enabled                = true
+  description            = "An attribute collected from a text field."
+  input_type             = "TEXT"
+  inventory_display_type = "HARDWARE"
+  data_type              = "STRING"
+}
 
-#   input_type        = "Text Field"
-#   inventory_display = "Hardware"
-# }
+# Script Example
+resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_script_1" {
+  name                   = "tf-ghatest-hello-world"
+  enabled                = true
+  description            = "An attribute collected via a script."
+  input_type             = "SCRIPT"
+  script_contents        = "#!/bin/bash\necho 'Hello, World!!!!! :)'"
+  inventory_display_type = "GENERAL"
+  data_type              = "STRING"
+}
 
-# resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_003" {
-#   name         = "tf-demo-cexa-hello-world"
-#   enabled      = true
-#   description  = "An attribute collected via a script."
-#   input_type   = "script"
-#   input_script = "#!/bin/bash\necho 'Hello, World!!!!! :)'"
-
-#   inventory_display = "General"
-# }
-
-# resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_004" {
-#   name         = "tf-demo-cexa-system_extensions"
-#   enabled      = true
-#   description  = "An attribute collected via a script."
-#   input_type   = "script"
-#   input_script = file("support_files/computer_extension_attributes/system_extensions.sh")
-
-#   inventory_display = "Operating System"
-# }
+# Script Example
+resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_script_2" {
+  name                   = "tf-ghatest-logged-in-user"
+  enabled                = true
+  description            = "An attribute collected via a script."
+  input_type             = "SCRIPT"
+  script_contents        = file("support_files/computer_extension_attributes/logged_in_user.sh")
+  inventory_display_type = "GENERAL"
+  data_type              = "STRING"
+}
