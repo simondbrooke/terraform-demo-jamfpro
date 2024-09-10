@@ -1,6 +1,6 @@
 # Pop-up Menu Example
 resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_popup_menu_1" {
-  name                   = "tf-ghatest-popup-menu-example"
+  name                   = "tf-demo-popup-menu-example"
   enabled                = true
   description            = "An attribute collected from a pop-up menu."
   input_type             = "POPUP"
@@ -11,7 +11,7 @@ resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attr
 
 # Text Field Example
 resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_text_field_1" {
-  name                   = "tf-ghatest-text-field-example"
+  name                   = "tf-demo-text-field-example"
   enabled                = true
   description            = "An attribute collected from a text field."
   input_type             = "TEXT"
@@ -21,7 +21,7 @@ resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_te
 
 # Script Example
 resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_script_1" {
-  name                   = "tf-ghatest-hello-world"
+  name                   = "tf-demo-hello-world"
   enabled                = true
   description            = "An attribute collected via a script."
   input_type             = "SCRIPT"
@@ -32,7 +32,7 @@ resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_sc
 
 # Script Example
 resource "jamfpro_computer_extension_attribute" "computer_extension_attribute_script_2" {
-  name                   = "tf-ghatest-logged-in-user"
+  name                   = "tf-demo-logged-in-user"
   enabled                = true
   description            = "An attribute collected via a script."
   input_type             = "SCRIPT"
