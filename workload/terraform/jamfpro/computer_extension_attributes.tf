@@ -35,17 +35,19 @@ resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attr
   inventory_display = "General"
 }
 
-resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_004" {
-  name                   = "tf-state-migration-test-004"
-  enabled                = true
-  inventory_display_type = "EXTENSION_ATTRIBUTES"
-  data_type       = "STRING"
-  input_type      = "SCRIPT"
-  script_contents = <<-SHELL
-#!/bin/sh
-/bin/echo "<result>sample</result>"
-SHELL
-}
+# New
+
+# resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_004" {
+#   name                   = "tf-state-migration-test-004"
+#   enabled                = true
+#   inventory_display_type = "EXTENSION_ATTRIBUTES"
+#   data_type       = "STRING"
+#   input_type      = "SCRIPT"
+#   script_contents = <<-SHELL
+# #!/bin/sh
+# /bin/echo "<result>sample</result>"
+# SHELL
+# }
 
 
 
