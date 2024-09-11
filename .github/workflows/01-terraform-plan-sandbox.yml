@@ -128,11 +128,30 @@ jobs:
             
             function getStatusSummary(status, planStatus, add, change, destroy) {
               if (status !== 'Success') return `❌ Plan ${status}`;
-              if (planStatus !== 'planned') return `⚠️ Plan ${planStatus}`;
-              if (destroy > 0) return '🚨 Destructive changes detected';
-              if (change > 0) return '⚠️ Resource modifications planned';
-              if (add > 0) return '✨ New resources to be added';
-              return '✅ No changes required';
+              
+              switch (planStatus) {
+                case 'planned':
+                  if (destroy > 0) return '🚨 Destructive changes detected';
+                  if (change > 0) return '⚠️ Resource modifications planned';
+                  if (add > 0) return '✨ New resources to be added';
+                  return '✅ No changes required';
+                case 'pending':
+                  return '⏳ Plan pending';
+                case 'running':
+                  return '🔄 Plan in progress';
+                case 'errored':
+                  return '🚫 Plan encountered an error';
+                case 'canceled':
+                  return '🛑 Plan was canceled';
+                case 'cost_estimated':
+                  return '💰 Cost estimation completed';
+                case 'policy_checked':
+                  return '📋 Policy check completed';
+                case 'planned_and_finished':
+                  return '🏁 Plan completed and finished';
+                default:
+                  return `ℹ️ Plan status: ${planStatus}`;
+              }
             }
 
             const statusSummary = getStatusSummary(
