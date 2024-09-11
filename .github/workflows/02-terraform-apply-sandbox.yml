@@ -81,19 +81,37 @@ jobs:
                 const runData = await fetchWithAuth(`https://app.terraform.io/api/v2/runs/${runId}`);
                 console.log('Run API Response:', JSON.stringify(runData, null, 2));
 
-                if (runData.data.relationships && runData.data.relationships.plan) {
-                  const planId = runData.data.relationships.plan.data.id;
-                  const planData = await fetchWithAuth(`https://app.terraform.io/api/v2/plans/${planId}`);
-                  console.log('Plan API Response:', JSON.stringify(planData, null, 2));
-                  return { run: runData.data, plan: planData.data };
+                if (runData.data.relationships && runData.data.relationships.apply) {
+                  const applyId = runData.data.relationships.apply.data.id;
+                  const applyData = await fetchWithAuth(`https://app.terraform.io/api/v2/applies/${applyId}`);
+                  console.log('Apply API Response:', JSON.stringify(applyData, null, 2));
+
+                  // Fetch apply logs
+                  const applyLogs = await fetchWithAuth(`https://app.terraform.io/api/v2/applies/${applyId}/logs`);
+                  console.log('Apply Logs:', applyLogs);
+
+                  return { run: runData.data, apply: applyData.data, applyLogs: applyLogs };
                 }
-                return { run: runData.data, plan: null };
+                return { run: runData.data, apply: null, applyLogs: null };
               } catch (error) {
                 console.error('Error fetching Terraform details:', error);
                 return null;
               }
             }
             
+            function extractApplySummary(applyLogs) {
+              const summaryRegex = /Apply complete! Resources: (\d+) added, (\d+) changed, (\d+) destroyed\./;
+              const match = applyLogs.match(summaryRegex);
+              if (match) {
+                return {
+                  added: parseInt(match[1]),
+                  changed: parseInt(match[2]),
+                  destroyed: parseInt(match[3])
+                };
+              }
+              return null;
+            }
+
             const details = await getTerraformRunDetails(process.env.TF_RUN_ID);
             
             let output = `#### Terraform Apply Result 🚀\n\n`;
@@ -102,13 +120,17 @@ jobs:
               const run = details.run;
               output += `**Status:** ${run.attributes.status || 'N/A'}\n\n`;
               
-              if (details.plan && details.plan.attributes) {
-                const plan = details.plan.attributes;
-                output += `**Resources Added:** ${plan.resource_additions || 0}\n`;
-                output += `**Resources Changed:** ${plan.resource_changes || 0}\n`;
-                output += `**Resources Destroyed:** ${plan.resource_destructions || 0}\n\n`;
+              if (details.applyLogs) {
+                const applySummary = extractApplySummary(details.applyLogs);
+                if (applySummary) {
+                  output += `**Resources Added:** ${applySummary.added}\n`;
+                  output += `**Resources Changed:** ${applySummary.changed}\n`;
+                  output += `**Resources Destroyed:** ${applySummary.destroyed}\n\n`;
+                } else {
+                  output += `**Apply summary not found in logs**\n\n`;
+                }
               } else {
-                output += `**Plan details not available**\n\n`;
+                output += `**Apply details not available**\n\n`;
               }
               
               if (run.links && run.links.self) {
