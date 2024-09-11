@@ -64,35 +64,44 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             async function fetchWithAuth(url) {
-              const response = await fetch(url, {
-                headers: {
-                  'Authorization': `Bearer ${{ secrets.TF_API_TOKEN }}`,
-                  'Content-Type': 'application/vnd.api+json'
+              try {
+                const response = await fetch(url, {
+                  headers: {
+                    'Authorization': `Bearer ${{ secrets.TF_API_TOKEN }}`,
+                    'Content-Type': 'application/vnd.api+json'
+                  }
+                });
+                if (!response.ok) {
+                  throw new Error(`HTTP error! status: ${response.status}`);
                 }
-              });
-              if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+              } catch (error) {
+                console.error(`Error fetching ${url}:`, error);
+                throw error;
               }
-              return await response.json();
             }
 
             async function getTerraformRunDetails(runId) {
               try {
+                console.log(`Fetching run data for run ID: ${runId}`);
                 const runData = await fetchWithAuth(`https://app.terraform.io/api/v2/runs/${runId}`);
                 console.log('Run API Response:', JSON.stringify(runData, null, 2));
 
-                if (runData.data.relationships && runData.data.relationships.apply) {
+                if (runData.data.relationships && runData.data.relationships.apply && runData.data.relationships.apply.data) {
                   const applyId = runData.data.relationships.apply.data.id;
+                  console.log(`Fetching apply data for apply ID: ${applyId}`);
                   const applyData = await fetchWithAuth(`https://app.terraform.io/api/v2/applies/${applyId}`);
                   console.log('Apply API Response:', JSON.stringify(applyData, null, 2));
 
-                  // Fetch apply logs
+                  console.log(`Fetching apply logs for apply ID: ${applyId}`);
                   const applyLogs = await fetchWithAuth(`https://app.terraform.io/api/v2/applies/${applyId}/logs`);
                   console.log('Apply Logs:', applyLogs);
 
                   return { run: runData.data, apply: applyData.data, applyLogs: applyLogs };
+                } else {
+                  console.log('Apply relationship not found in run data');
+                  return { run: runData.data, apply: null, applyLogs: null };
                 }
-                return { run: runData.data, apply: null, applyLogs: null };
               } catch (error) {
                 console.error('Error fetching Terraform details:', error);
                 return null;
@@ -100,6 +109,10 @@ jobs:
             }
             
             function extractApplySummary(applyLogs) {
+              if (typeof applyLogs !== 'string') {
+                console.error('Apply logs are not in the expected string format');
+                return null;
+              }
               const summaryRegex = /Apply complete! Resources: (\d+) added, (\d+) changed, (\d+) destroyed\./;
               const match = applyLogs.match(summaryRegex);
               if (match) {
@@ -109,9 +122,11 @@ jobs:
                   destroyed: parseInt(match[3])
                 };
               }
+              console.log('Apply summary not found in logs');
               return null;
             }
 
+            console.log(`Starting to fetch details for run ID: ${process.env.TF_RUN_ID}`);
             const details = await getTerraformRunDetails(process.env.TF_RUN_ID);
             
             let output = `#### Terraform Apply Result 🚀\n\n`;
@@ -130,7 +145,7 @@ jobs:
                   output += `**Apply summary not found in logs**\n\n`;
                 }
               } else {
-                output += `**Apply details not available**\n\n`;
+                output += `**Apply logs not available**\n\n`;
               }
               
               if (run.links && run.links.self) {
@@ -138,7 +153,7 @@ jobs:
                 output += `[View Run Details](${runUrl})\n\n`;
               }
             } else {
-              output += `Unable to fetch detailed run information.\n\n`;
+              output += `Unable to fetch detailed run information. Check the action logs for more details.\n\n`;
             }
             
             output += `*Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
