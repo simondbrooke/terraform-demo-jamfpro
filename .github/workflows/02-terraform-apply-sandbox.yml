@@ -63,16 +63,19 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { HttpClient } = require('@actions/http-client');
-            
             async function getTerraformRunDetails(runId) {
               try {
-                const http = new HttpClient('terraform-action');
-                const response = await http.getJson(`https://app.terraform.io/api/v2/runs/${runId}`, {
-                  'Authorization': `Bearer ${{ secrets.TF_API_TOKEN }}`,
-                  'Content-Type': 'application/vnd.api+json'
+                const response = await fetch(`https://app.terraform.io/api/v2/runs/${runId}`, {
+                  headers: {
+                    'Authorization': `Bearer ${{ secrets.TF_API_TOKEN }}`,
+                    'Content-Type': 'application/vnd.api+json'
+                  }
                 });
-                return response.result.data;
+                if (!response.ok) {
+                  throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data.data;
               } catch (error) {
                 console.error('Error fetching Terraform run details:', error);
                 return null;
@@ -95,9 +98,9 @@ jobs:
             
             output += `*Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
             
-            github.rest.issues.createComment({
+            await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: output
-            })
+            });
