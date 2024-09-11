@@ -1,3 +1,58 @@
+
+resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_001" {
+  name        = "tf-state-migration-test-001"
+  enabled     = true
+  description = "An attribute collected from a pop-up menu."
+  input_type  = "Pop-up Menu"
+  input_popup = ["Option 1", "Option 2", "Option 3"]
+
+
+  inventory_display = "User and Location"
+}
+
+# //-------------------------------------------------------------------//
+
+resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_002" {
+  name              = "tf-state-migration-test-002"
+  enabled           = true
+  description       = "An attribute collected from a text field."
+  input_type        = "Text Field"
+  inventory_display = "Hardware"
+}
+
+# //-------------------------------------------------------------------//
+
+resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_003" {
+  name         = "tf-state-migration-test-003"
+  enabled      = true
+  description  = "An attribute collected via a script."
+  input_type   = "script"
+  input_script = <<-SHELL
+  #!/bin/sh
+  /bin/echo "<result>sample</result>"
+  SHELL
+
+  inventory_display = "General"
+}
+
+# resource "jamfpro_computer_extension_attribute" "sample" {
+#   name                   = "sample"
+#   enabled                = true
+#   inventory_display_type = "EXTENSION_ATTRIBUTES"
+#   data_type       = "STRING"
+#   input_type      = "SCRIPT"
+#   script_contents = <<-SHELL
+# #!/bin/sh
+# /bin/echo "<result>sample</result>"
+# SHELL
+# }
+
+
+
+
+
+
+
 # # Pop-up Menu Example
 # resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_popup_menu_1" {
 #   name                   = "tf-demo-popup-menu-example"
