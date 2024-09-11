@@ -126,10 +126,27 @@ jobs:
               pr = prs[0];
             }
             
+            function getStatusSummary(status, planStatus, add, change, destroy) {
+              if (status !== 'Success') return `❌ Plan ${status}`;
+              if (planStatus !== 'planned') return `⚠️ Plan ${planStatus}`;
+              if (destroy > 0) return '🚨 Destructive changes detected';
+              if (change > 0) return '⚠️ Resource modifications planned';
+              if (add > 0) return '✨ New resources to be added';
+              return '✅ No changes required';
+            }
+
+            const statusSummary = getStatusSummary(
+              '${{ needs.terraform-plan.outputs.status }}',
+              '${{ needs.terraform-plan.outputs.plan_status }}',
+              ${{ needs.terraform-plan.outputs.add }},
+              ${{ needs.terraform-plan.outputs.change }},
+              ${{ needs.terraform-plan.outputs.destroy }}
+            );
+            
             // Add Terraform plan results to PR
             const planOutput = `### 🔍 Terraform Plan Results
 
-            ${getStatusEmoji(${{ needs.terraform-plan.outputs.add }}, ${{ needs.terraform-plan.outputs.change }}, ${{ needs.terraform-plan.outputs.destroy }})}
+            ${statusSummary}
 
             \`\`\`diff
             + Plan: ${{ needs.terraform-plan.outputs.add }} to add
@@ -138,6 +155,11 @@ jobs:
             \`\`\`
 
             📊 [View full plan details](${{ needs.terraform-plan.outputs.run_link }})
+
+            Additional Information:
+            - Operation Result: ${{ needs.terraform-plan.outputs.status }}
+            - Plan Status: ${{ needs.terraform-plan.outputs.plan_status }}
+            - Plan ID: ${{ needs.terraform-plan.outputs.plan_id }}
 
             ---
             ⚠️ Please review these changes carefully before merging.
@@ -149,10 +171,3 @@ jobs:
               issue_number: pr.number,
               body: planOutput
             });
-
-            function getStatusEmoji(add, change, destroy) {
-              if (destroy > 0) return '🚨';
-              if (change > 0) return '⚠️';
-              if (add > 0) return '✨';
-              return '✅';
-            }
