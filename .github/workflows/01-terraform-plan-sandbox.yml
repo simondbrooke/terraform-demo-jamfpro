@@ -98,10 +98,10 @@ jobs:
               const { data: newPr } = await github.rest.pulls.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                title: `Terraform changes from ${branch}`,
+                title: `🔄 Terraform changes from ${branch}`,
                 head: branch,
                 base: base,
-                body: 'This PR contains Terraform changes.'
+                body: '🚀 This PR contains Terraform changes.'
               });
               pr = newPr;
             } else {
@@ -109,11 +109,20 @@ jobs:
             }
             
             // Add Terraform plan results to PR
-            const planOutput = `#### Terraform Plan Results
+            const planOutput = `### 🔍 Terraform Plan Results
+
+            ${getStatusEmoji(needs.terraform-plan.outputs.add, needs.terraform-plan.outputs.change, needs.terraform-plan.outputs.destroy)}
+
+            \`\`\`diff
+            + Plan: ${needs.terraform-plan.outputs.add} to add
+            ~ ${needs.terraform-plan.outputs.change} to change
+            - ${needs.terraform-plan.outputs.destroy} to destroy
             \`\`\`
-            Plan: ${{ needs.terraform-plan.outputs.add }} to add, ${{ needs.terraform-plan.outputs.change }} to change, ${{ needs.terraform-plan.outputs.destroy }} to destroy.
-            \`\`\`
-            [View full plan details](${{ needs.terraform-plan.outputs.run_link }})
+
+            📊 [View full plan details](${needs.terraform-plan.outputs.run_link})
+
+            ---
+            ⚠️ Please review these changes carefully before merging.
             `;
             
             await github.rest.issues.createComment({
@@ -122,3 +131,10 @@ jobs:
               issue_number: pr.number,
               body: planOutput
             });
+
+            function getStatusEmoji(add, change, destroy) {
+              if (destroy > 0) return '🚨';
+              if (change > 0) return '⚠️';
+              if (add > 0) return '✨';
+              return '✅';
+            }
