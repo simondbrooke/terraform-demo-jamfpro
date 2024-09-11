@@ -10,42 +10,42 @@ resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attr
   inventory_display = "User and Location"
 }
 
-# # //-------------------------------------------------------------------//
+# //-------------------------------------------------------------------//
 
-# resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_002" {
-#   name              = "tf-state-migration-test-002"
-#   enabled           = true
-#   description       = "An attribute collected from a text field."
-#   input_type        = "Text Field"
-#   inventory_display = "Hardware"
-# }
+resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_002" {
+  name              = "tf-state-migration-test-002"
+  enabled           = true
+  description       = "An attribute collected from a text field."
+  input_type        = "Text Field"
+  inventory_display = "Hardware"
+}
 
-# # //-------------------------------------------------------------------//
+# //-------------------------------------------------------------------//
 
-# resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_003" {
-#   name         = "tf-state-migration-test-003"
-#   enabled      = true
-#   description  = "An attribute collected via a script."
-#   input_type   = "script"
-#   input_script = <<-SHELL
-#   #!/bin/sh
-#   /bin/echo "<result>sample</result>"
-#   SHELL
+resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_003" {
+  name         = "tf-state-migration-test-003"
+  enabled      = true
+  description  = "An attribute collected via a script."
+  input_type   = "script"
+  input_script = <<-SHELL
+  #!/bin/sh
+  /bin/echo "<result>sample</result>"
+  SHELL
 
-#   inventory_display = "General"
-# }
+  inventory_display = "General"
+}
 
-# resource "jamfpro_computer_extension_attribute" "sample" {
-#   name                   = "sample"
-#   enabled                = true
-#   inventory_display_type = "EXTENSION_ATTRIBUTES"
-#   data_type       = "STRING"
-#   input_type      = "SCRIPT"
-#   script_contents = <<-SHELL
-# #!/bin/sh
-# /bin/echo "<result>sample</result>"
-# SHELL
-# }
+resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_004" {
+  name                   = "tf-state-migration-test-004"
+  enabled                = true
+  inventory_display_type = "EXTENSION_ATTRIBUTES"
+  data_type       = "STRING"
+  input_type      = "SCRIPT"
+  script_contents = <<-SHELL
+#!/bin/sh
+/bin/echo "<result>sample</result>"
+SHELL
+}
 
 
 
