@@ -1,53 +1,81 @@
+// pop up
+
+// old
+# resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_001" {
+#   name        = "tf-state-migration-test-001"
+#   enabled     = true
+#   description = "An attribute collected from a pop-up menu."
+#   input_type  = "Pop-up Menu"
+#   input_popup = ["Option 1", "Option 2", "Option 3"]
+#   inventory_display = "User and Location"
+# }
+
+// new
 
 resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_001" {
-  name        = "tf-state-migration-test-001"
-  enabled     = true
-  description = "An attribute collected from a pop-up menu."
-  input_type  = "Pop-up Menu"
-  input_popup = ["Option 1", "Option 2", "Option 3"]
-
-
-  inventory_display = "User and Location"
+  name                   = "tf-state-migration-test-001"
+  enabled                = true
+  description            = "An attribute collected from a pop-up menu."
+  input_type             = "POPUP"
+  popup_menu_choices     = ["Option 1", "Option 2", "Option 3"]
+  inventory_display_type = "USER_AND_LOCATION"
+  data_type              = "STRING"
 }
 
 # //-------------------------------------------------------------------//
+// text
+
+// old
+# resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_002" {
+#   name              = "tf-state-migration-test-002"
+#   enabled           = true
+#   description       = "An attribute collected from a text field."
+#   input_type        = "Text Field"
+#   inventory_display = "Hardware"
+# }
+
+// new
 
 resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_002" {
-  name              = "tf-state-migration-test-002"
-  enabled           = true
-  description       = "An attribute collected from a text field."
-  input_type        = "Text Field"
-  inventory_display = "Hardware"
+  name                   = "tf-state-migration-test-002"
+  enabled                = true
+  description            = "An attribute collected from a text field."
+  input_type             = "TEXT"
+  inventory_display_type = "HARDWARE"
+  data_type              = "STRING"
 }
+
 
 # //-------------------------------------------------------------------//
+// script
 
-resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_003" {
-  name         = "tf-state-migration-test-003"
-  enabled      = true
-  description  = "An attribute collected via a script."
-  input_type   = "script"
-  input_script = <<-SHELL
-  #!/bin/sh
-  /bin/echo "<result>sample</result>"
-  SHELL
+// old
+# resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_003" {
+#   name         = "tf-state-migration-test-003"
+#   enabled      = true
+#   description  = "An attribute collected via a script."
+#   input_type   = "script"
+#   input_script = <<-SHELL
+#   #!/bin/sh
+#   /bin/echo "<result>sample</result>"
+#   SHELL
 
-  inventory_display = "General"
-}
+#   inventory_display = "General"
+# }
 
 # New
 
-# resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_004" {
-#   name                   = "tf-state-migration-test-004"
-#   enabled                = true
-#   inventory_display_type = "EXTENSION_ATTRIBUTES"
-#   data_type       = "STRING"
-#   input_type      = "SCRIPT"
-#   script_contents = <<-SHELL
-# #!/bin/sh
-# /bin/echo "<result>sample</result>"
-# SHELL
-# }
+resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_003" {
+  name                   = "tf-state-migration-test-003"
+  enabled                = true
+  inventory_display_type = "EXTENSION_ATTRIBUTES"
+  data_type       = "STRING"
+  input_type      = "SCRIPT"
+  script_contents = <<-SHELL
+#!/bin/sh
+/bin/echo "<result>sample</result>"
+SHELL
+}
 
 
 
@@ -55,7 +83,7 @@ resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attr
 
 
 
-# # Pop-up Menu Example
+# Pop-up Menu Example
 # resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_popup_menu_1" {
 #   name                   = "tf-demo-popup-menu-example"
 #   enabled                = true
