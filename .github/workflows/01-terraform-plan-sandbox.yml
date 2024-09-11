@@ -177,7 +177,6 @@ jobs:
 
             Additional Information:
             - Operation Result: ${{ needs.terraform-plan.outputs.status }}
-            - Plan Status: ${{ needs.terraform-plan.outputs.plan_status }}
             - Plan ID: ${{ needs.terraform-plan.outputs.plan_id }}
 
             ---
