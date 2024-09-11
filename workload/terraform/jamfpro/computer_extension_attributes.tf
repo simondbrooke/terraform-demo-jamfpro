@@ -1,14 +1,14 @@
 
-# resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_001" {
-#   name        = "tf-state-migration-test-001"
-#   enabled     = true
-#   description = "An attribute collected from a pop-up menu."
-#   input_type  = "Pop-up Menu"
-#   input_popup = ["Option 1", "Option 2", "Option 3"]
+resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_001" {
+  name        = "tf-state-migration-test-001"
+  enabled     = true
+  description = "An attribute collected from a pop-up menu."
+  input_type  = "Pop-up Menu"
+  input_popup = ["Option 1", "Option 2", "Option 3"]
 
 
-#   inventory_display = "User and Location"
-# }
+  inventory_display = "User and Location"
+}
 
 # # //-------------------------------------------------------------------//
 
