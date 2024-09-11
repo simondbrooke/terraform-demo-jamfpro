@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 
 	tfe "github.com/hashicorp/go-tfe"
 )
@@ -44,30 +43,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	logs, err := client.Applies.Logs(context.Background(), apply.ID)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error reading apply logs: %s\n", err)
-		os.Exit(1)
-	}
-
 	result := ApplyResult{
-		Status: string(run.Status),
-		RunURL: run.HTTPURL,
-	}
-
-	logContent, err := logs.Read(context.Background())
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error reading log content: %s\n", err)
-		os.Exit(1)
-	}
-
-	// Extract resource changes from logs
-	for _, line := range strings.Split(string(logContent), "\n") {
-		if strings.Contains(line, "Apply complete!") {
-			fmt.Sscanf(line, "Apply complete! Resources: %d added, %d changed, %d destroyed.",
-				&result.ResourcesAdded, &result.ResourcesChanged, &result.ResourcesDestroyed)
-			break
-		}
+		Status:             string(apply.Status),
+		ResourcesAdded:     apply.ResourceAdditions,
+		ResourcesChanged:   apply.ResourceChanges,
+		ResourcesDestroyed: apply.ResourceDestructions,
+		RunURL:             fmt.Sprintf("https://app.terraform.io/app/%s/workspaces/%s/runs/%s", run.Workspace.Organization.Name, run.Workspace.Name, run.ID),
 	}
 
 	jsonResult, err := json.Marshal(result)
