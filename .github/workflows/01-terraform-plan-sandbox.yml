@@ -41,6 +41,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Extract branch name
         id: extract_branch
@@ -65,7 +67,7 @@ jobs:
       target_environment: "sandbox"
       debug: true
       config_directory: "workload/terraform/jamfpro"
-      release_version: ${{ github.ref_name }}
+      release_version: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
     secrets:
       TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
   
