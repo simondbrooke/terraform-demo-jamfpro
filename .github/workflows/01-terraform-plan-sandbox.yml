@@ -111,15 +111,15 @@ jobs:
             // Add Terraform plan results to PR
             const planOutput = `### 🔍 Terraform Plan Results
 
-            ${getStatusEmoji(needs.terraform-plan.outputs.add, needs.terraform-plan.outputs.change, needs.terraform-plan.outputs.destroy)}
+            ${getStatusEmoji(${{ needs.terraform-plan.outputs.add }}, ${{ needs.terraform-plan.outputs.change }}, ${{ needs.terraform-plan.outputs.destroy }})}
 
             \`\`\`diff
-            + Plan: ${needs.terraform-plan.outputs.add} to add
-            ~ ${needs.terraform-plan.outputs.change} to change
-            - ${needs.terraform-plan.outputs.destroy} to destroy
+            + Plan: ${{ needs.terraform-plan.outputs.add }} to add
+            ~ ${{ needs.terraform-plan.outputs.change }} to change
+            - ${{ needs.terraform-plan.outputs.destroy }} to destroy
             \`\`\`
 
-            📊 [View full plan details](${needs.terraform-plan.outputs.run_link})
+            📊 [View full plan details](${{ needs.terraform-plan.outputs.run_link }})
 
             ---
             ⚠️ Please review these changes carefully before merging.
