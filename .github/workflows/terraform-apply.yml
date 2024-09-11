@@ -16,6 +16,46 @@ on:
         required: false
         type: boolean
         default: false
+    outputs:
+      run_id:
+        description: "The ID of the Terraform apply run"
+        value: ${{ jobs.terraform-apply.outputs.run_id }}
+      apply_status:
+        description: "The status of the Terraform apply"
+        value: ${{ jobs.terraform-apply.outputs.apply_status }}
+      configuration_version:
+        description: "The configuration version ID"
+        value: ${{ jobs.terraform-apply.outputs.configuration_version }}
+      workspace_id:
+        description: "The workspace ID"
+        value: ${{ jobs.terraform-apply.outputs.workspace_id }}
+      created_at:
+        description: "The creation time of the run"
+        value: ${{ jobs.terraform-apply.outputs.created_at }}
+      status:
+        description: "The overall status of the run"
+        value: ${{ jobs.terraform-apply.outputs.status }}
+      is_confirmable:
+        description: "Whether the run is confirmable"
+        value: ${{ jobs.terraform-apply.outputs.is_confirmable }}
+      is_cancelable:
+        description: "Whether the run is cancelable"
+        value: ${{ jobs.terraform-apply.outputs.is_cancelable }}
+      plan_only:
+        description: "Whether the run is plan-only"
+        value: ${{ jobs.terraform-apply.outputs.plan_only }}
+      has_changes:
+        description: "Whether the run has changes"
+        value: ${{ jobs.terraform-apply.outputs.has_changes }}
+      terraform_version:
+        description: "The Terraform version used"
+        value: ${{ jobs.terraform-apply.outputs.terraform_version }}
+      source:
+        description: "The source of the run"
+        value: ${{ jobs.terraform-apply.outputs.source }}
+      trigger_reason:
+        description: "The reason for triggering the run"
+        value: ${{ jobs.terraform-apply.outputs.trigger_reason }}
     secrets:
       TF_API_TOKEN:
         required: true
@@ -29,6 +69,20 @@ jobs:
   terraform-apply:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
+    outputs:
+      run_id: ${{ steps.apply-run.outputs.run_id }}
+      apply_status: ${{ steps.apply.outcome }}
+      configuration_version: ${{ fromJSON(steps.apply-run.outputs.payload).data.relationships.configuration-version.data.id }}
+      workspace_id: ${{ fromJSON(steps.apply-run.outputs.payload).data.relationships.workspace.data.id }}
+      created_at: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.created-at }}
+      status: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.status }}
+      is_confirmable: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable }}
+      is_cancelable: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsCancelable }}
+      plan_only: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.plan-only }}
+      has_changes: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.has-changes }}
+      terraform_version: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.terraform-version }}
+      source: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.source }}
+      trigger_reason: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.trigger-reason }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.7
@@ -87,20 +141,3 @@ jobs:
         with:
           run: ${{ steps.apply-run.outputs.run_id }}
           comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
-
-      - name: Show Apply Output
-        if: ${{ inputs.debug }}
-        run: |
-          echo "Apply Run ID: ${{ steps.apply-run.outputs.run_id }}"
-          echo "Apply Status: ${{ steps.apply.outcome }}"
-          echo "Configuration Version: ${{ fromJSON(steps.apply-run.outputs.payload).data.relationships.configuration-version.data.id }}"
-          echo "Workspace ID: ${{ fromJSON(steps.apply-run.outputs.payload).data.relationships.workspace.data.id }}"
-          echo "Created At: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.created-at }}"
-          echo "Status: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.status }}"
-          echo "Is Confirmable: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable }}"
-          echo "Is Cancelable: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsCancelable }}"
-          echo "Plan Only: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.plan-only }}"
-          echo "Has Changes: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.has-changes }}"
-          echo "Terraform Version: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.terraform-version }}"
-          echo "Source: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.source }}"
-          echo "Trigger Reason: ${{ fromJSON(steps.apply-run.outputs.payload).data.attributes.trigger-reason }}"
