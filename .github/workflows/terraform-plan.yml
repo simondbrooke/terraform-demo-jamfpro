@@ -23,21 +23,24 @@ on:
         required: true
         type: string
     outputs:
-      plan_id:
-        description: "The ID of the Terraform plan"
-        value: ${{ jobs.terraform-plan.outputs.plan_id }}
-      plan_output:
-        description: "The output of the Terraform plan"
-        value: ${{ jobs.terraform-plan.outputs.plan_output  }}
+      status:
+        description: "The result of the operation"
+        value: ${{ jobs.terraform-plan.outputs.status }}
       add:
-        description: "Number of resources to add"
+        description: "Resource Additions from the HCP Terraform plan"
         value: ${{ jobs.terraform-plan.outputs.add }}
       change:
-        description: "Number of resources to change"
+        description: "Resource Changes from the HCP Terraform plan"
         value: ${{ jobs.terraform-plan.outputs.change }}
       destroy:
-        description: "Number of resources to destroy"
+        description: "Resource Destructions from the HCP Terraform plan"
         value: ${{ jobs.terraform-plan.outputs.destroy }}
+      plan_id:
+        description: "The provided plan ID"
+        value: ${{ jobs.terraform-plan.outputs.plan_id }}
+      plan_status:
+        description: "The status of the Plan"
+        value: ${{ jobs.terraform-plan.outputs.plan_status }}
       run_link:
         description: "Link to the Terraform Cloud run"
         value: ${{ jobs.terraform-plan.outputs.run_link }}
@@ -54,10 +57,12 @@ jobs:
   terraform-plan:
     runs-on: ubuntu-latest
     outputs:
-      plan_id: ${{ steps.plan-output.outputs.plan_id }}
+      status: ${{ steps.plan-output.outputs.status }}
       add: ${{ steps.plan-output.outputs.add }}
       change: ${{ steps.plan-output.outputs.change }}
       destroy: ${{ steps.plan-output.outputs.destroy }}
+      plan_id: ${{ steps.plan-output.outputs.plan_id }}
+      plan_status: ${{ steps.plan-output.outputs.plan_status }}
       run_link: ${{ steps.plan-run.outputs.run_link }}
     steps:
       - name: Checkout release branch
