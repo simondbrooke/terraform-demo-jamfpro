@@ -41,6 +41,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Extract branch name
         id: extract_branch
