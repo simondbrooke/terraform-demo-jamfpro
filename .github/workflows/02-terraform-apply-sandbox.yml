@@ -64,10 +64,10 @@ jobs:
         env:
           TF_RUN_ID: ${{ steps.apply-run.outputs.run_id }}
           TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+          TF_WORKSPACE: ${{ env.TF_WORKSPACE }}
+          TF_CLOUD_ORGANIZATION: ${{ env.TF_CLOUD_ORGANIZATION }}
         run: |
           cd workload/scripts/get_apply_results
-          go mod init get_apply_results
-          go mod tidy
           go build -o get_apply_results
           ./get_apply_results > ../../../apply_results.json
         working-directory: ${{ github.workspace }}
