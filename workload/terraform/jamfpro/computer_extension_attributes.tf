@@ -1,6 +1,6 @@
 // pop up
 
-// old
+// old v0.2.0
 # resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_001" {
 #   name        = "tf-state-migration-test-001"
 #   enabled     = true
@@ -10,22 +10,22 @@
 #   inventory_display = "User and Location"
 # }
 
-// new
+// new v0.3.0
 
-resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_001" {
-  name                   = "tf-state-migration-test-001"
-  enabled                = true
-  description            = "An attribute collected from a pop-up menu."
-  input_type             = "POPUP"
-  popup_menu_choices     = ["Option 1", "Option 2", "Option 3"]
-  inventory_display_type = "USER_AND_LOCATION"
-  data_type              = "STRING"
-}
+# resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_001" {
+#   name                   = "tf-state-migration-test-001"
+#   enabled                = true
+#   description            = "An attribute collected from a pop-up menu."
+#   input_type             = "POPUP"
+#   popup_menu_choices     = ["Option 1", "Option 2", "Option 3"]
+#   inventory_display_type = "USER_AND_LOCATION"
+#   data_type              = "STRING"
+# }
 
 # //-------------------------------------------------------------------//
 // text
 
-// old
+// old v0.2.0
 # resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_002" {
 #   name              = "tf-state-migration-test-002"
 #   enabled           = true
@@ -34,22 +34,22 @@ resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attr
 #   inventory_display = "Hardware"
 # }
 
-// new
+// new v0.3.0
 
-resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_002" {
-  name                   = "tf-state-migration-test-002"
-  enabled                = true
-  description            = "An attribute collected from a text field."
-  input_type             = "TEXT"
-  inventory_display_type = "HARDWARE"
-  data_type              = "STRING"
-}
+# resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_002" {
+#   name                   = "tf-state-migration-test-002"
+#   enabled                = true
+#   description            = "An attribute collected from a text field."
+#   input_type             = "TEXT"
+#   inventory_display_type = "HARDWARE"
+#   data_type              = "STRING"
+# }
 
 
 # //-------------------------------------------------------------------//
 // script
 
-// old
+// old v0.2.0
 # resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_003" {
 #   name         = "tf-state-migration-test-003"
 #   enabled      = true
@@ -63,19 +63,19 @@ resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attr
 #   inventory_display = "General"
 # }
 
-# New
+# New v0.3.0
 
-resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_003" {
-  name                   = "tf-state-migration-test-003"
-  enabled                = true
-  inventory_display_type = "EXTENSION_ATTRIBUTES"
-  data_type       = "STRING"
-  input_type      = "SCRIPT"
-  script_contents = <<-SHELL
-#!/bin/sh
-/bin/echo "<result>sample</result>"
-SHELL
-}
+# resource "jamfpro_computer_extension_attribute" "jamfpro_computer_extension_attribute_003" {
+#   name                   = "tf-state-migration-test-003"
+#   enabled                = true
+#   inventory_display_type = "EXTENSION_ATTRIBUTES"
+#   data_type              = "STRING"
+#   input_type             = "SCRIPT"
+#   script_contents        = <<-SHELL
+# #!/bin/sh
+# /bin/echo "<result>sample</result>"
+# SHELL
+# }
 
 
 
