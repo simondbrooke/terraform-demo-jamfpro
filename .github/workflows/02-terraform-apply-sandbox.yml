@@ -75,6 +75,7 @@ jobs:
                   throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
+                console.log('Terraform API Response:', JSON.stringify(data, null, 2));
                 return data.data;
               } catch (error) {
                 console.error('Error fetching Terraform run details:', error);
@@ -86,17 +87,30 @@ jobs:
             
             let output = `#### Terraform Apply Result 🚀\n\n`;
             
-            if (runDetails) {
-              output += `**Status:** ${runDetails.attributes.status}\n`;
-              output += `**Resources Added:** ${runDetails.attributes.plan.resource_additions || 0}\n`;
-              output += `**Resources Changed:** ${runDetails.attributes.plan.resource_changes || 0}\n`;
-              output += `**Resources Destroyed:** ${runDetails.attributes.plan.resource_destructions || 0}\n\n`;
-              output += `[View Run Details](${runDetails.links.self})\n\n`;
+            if (runDetails && runDetails.attributes) {
+              output += `**Status:** ${runDetails.attributes.status || 'N/A'}\n`;
+              
+              if (runDetails.attributes.plan && typeof runDetails.attributes.plan === 'object') {
+                output += `**Resources Added:** ${runDetails.attributes.plan.resource_additions || 0}\n`;
+                output += `**Resources Changed:** ${runDetails.attributes.plan.resource_changes || 0}\n`;
+                output += `**Resources Destroyed:** ${runDetails.attributes.plan.resource_destructions || 0}\n\n`;
+              } else {
+                output += `**Plan details not available**\n\n`;
+              }
+              
+              if (runDetails.links && runDetails.links.self) {
+                output += `[View Run Details](${runDetails.links.self})\n\n`;
+              }
             } else {
-              output += `Unable to fetch detailed run information.\n\n`;
+              output += `Unable to fetch detailed run information or unexpected response structure.\n\n`;
+              if (runDetails) {
+                output += `Run details: ${JSON.stringify(runDetails, null, 2)}\n\n`;
+              }
             }
             
             output += `*Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            
+            console.log('Comment body:', output);
             
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
