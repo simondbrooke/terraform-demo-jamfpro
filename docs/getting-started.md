@@ -213,7 +213,7 @@ Steps:
 - Check the box for "Allow GitHub Actions to create and approve pull requests".
 - Click Save.
 
-![Workflow Permissions](./terraform-demo-jamfpro/docs/media/screenshots/workflow-permissions.png)
+![Workflow Permissions](./docs/media/screenshots/workflow-permissions.png)
 
 
 6. **Update Terraform Variables**: Modify the `terraform` block in your `.tf` files to match your Jamf Pro instance details. For example:
