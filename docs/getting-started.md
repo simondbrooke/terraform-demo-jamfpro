@@ -215,6 +215,29 @@ Steps:
 
 ![Workflow Permissions](./docs/media/screenshots/workflow-permissions.png)
 
+Next go to settings -> rules - > rulesets and create a new ruleset
+
+give it a name of your choice e.g `ruleset-protect-staging+production`
+
+Set in the `Bypass list` - `Organization admin` as an exemption.
+
+Set the target branches
+
+`staging`
+`production`
+
+Now set the following branch rules
+
+`Restrict deletions`
+`Require a pull request before merging`
+- Required approvals - 1
+- Dismiss stale pull request approvals when new commits are pushed
+- Require approval of the most recent reviewable push
+- Require conversation resolution before merging
+`Require status checks to pass`
+`Block force pushes`
+
+
 
 6. **Update Terraform Variables**: Modify the `terraform` block in your `.tf` files to match your Jamf Pro instance details. For example:
 
