@@ -237,8 +237,6 @@ Now set the following branch rules
 `Require status checks to pass`
 `Block force pushes`
 
-
-
 6. **Update Terraform Variables**: Modify the `terraform` block in your `.tf` files to match your Jamf Pro instance details. For example:
 
    ```hcl
