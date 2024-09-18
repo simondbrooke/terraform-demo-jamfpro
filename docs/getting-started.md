@@ -201,7 +201,64 @@ These webhook URLs are used in the Send Notification workflow (send-notification
 
    Note: For Terraform Cloud, when setting variables you do not need to prefix your env vars with `TF_VAR_` as Terraform Cloud automatically does this for you. Additionally, ensure to select the variable category as `Terraform variable`, with the HCL tickbox unchecked.
 
-5. **Update Terraform Variables**: Modify the `terraform` block in your `.tf` files to match your Jamf Pro instance details. For example:
+5. **GitHub Repository-Level Setting**:
+At the repository level, you need to explicitly allow GitHub Actions to create or approve pull requests by adjusting the workflow permissions for your demo repository.
+
+Steps:
+
+- Navigate to the repository on GitHub.
+- Go to Settings > Actions > General.
+- Scroll down to Workflow permissions.
+- Choose "Read and write permissions".
+- Check the box for "Allow GitHub Actions to create and approve pull requests".
+- Click Save.
+
+![Workflow Permissions](./media/screenshots/workflow-permissions.png)
+
+6. ### Create a New Ruleset to Protect `staging` and `production` Branches
+
+1. **Navigate to Repository Settings**:
+   - Go to your repository on GitHub.
+   - Click on **Settings** in the repository navigation.
+
+2. **Access Rulesets**:
+   - In the **Settings** sidebar, scroll down and click on **Rules**.
+   - Then, select **Rulesets**.
+
+3. **Create a New Ruleset**:
+   - Click the **New ruleset** button to create a new branch protection ruleset.
+
+4. **Give the Ruleset a Name**:
+   - In the **Name** field, enter a name of your choice, such as `ruleset-protect-staging+production`.
+
+5. **Set the Bypass List**:
+   - In the **Bypass list** section, add `Organization admin` as an exemption. This will allow organization admins to bypass the rules if necessary.
+
+6. **Target Branches**:
+   - Under **Target branches**, add the branches you want to protect:
+     - `staging`
+     - `production`
+
+7. **Configure Branch Rules**:
+   - Set the following branch protection rules:
+
+     - **Restrict deletions**: Enable this option to prevent deletion of the `staging` and `production` branches.
+     
+     - **Require a pull request before merging**: Enable this option to ensure that all changes are reviewed before merging.
+       - **Required approvals**: Set this to `1` to ensure at least one approval is required for merging.
+       - **Dismiss stale pull request approvals when new commits are pushed**: Enable this option to dismiss previous approvals when new commits are made.
+       - **Require approval of the most recent reviewable push**: Enable this option to ensure that only the most recent commit is reviewed and approved.
+       - **Require conversation resolution before merging**: Enable this option to ensure that all review conversations are resolved before the pull request can be merged.
+
+     - **Require status checks to pass**: Enable this to ensure that all required status checks (e.g., CI/CD tests) pass before a pull request is merged.
+
+     - **Block force pushes**: Enable this to block any force pushes to the `staging` and `production` branches, ensuring that no one can overwrite the branch history.
+
+8. **Save the Ruleset**:
+   - After configuring all of the rules, click **Create** or **Save** to apply the new ruleset to the `staging` and `production` branches.
+
+
+6. **Update Terraform Variables**: Modify the `terraform` block in your `.tf` files to match your Jamf Pro instance details. For example:
 
    ```hcl
    provider "jamfpro" {
@@ -223,7 +280,7 @@ These webhook URLs are used in the Send Notification workflow (send-notification
 
    It's strongly recommended for beginners to ensure that `jamfpro_load_balancer_lock` is set to true, to avoid any issues with the Jamf Pro load balancer.
 
-6. **Backend Configuration**: For our multi-environment setup, we'll be using Terraform workspaces. This approach allows us to use a single set of configuration files while maintaining separate states for each environment. Here's how to structure it:
+7. **Backend Configuration**: For our multi-environment setup, we'll be using Terraform workspaces. This approach allows us to use a single set of configuration files while maintaining separate states for each environment. Here's how to structure it:
 
    In your main Terraform configuration file (e.g., `main.tf`):
 
@@ -241,7 +298,7 @@ These webhook URLs are used in the Send Notification workflow (send-notification
    This configuration tells Terraform to use Terraform Cloud with the "deploymenttheory" organization and to work with any workspace tagged with "jamfpro".
 
 
-6. **Terraform Provider Configuration**: Specify the provider source and version:
+8. **Terraform Provider Configuration**: Specify the provider source and version:
 
    ```hcl
    terraform {
@@ -254,9 +311,9 @@ These webhook URLs are used in the Send Notification workflow (send-notification
    }
    ```
 
-7. **Define Your Resources**: Use Terraform resource definitions to manage your Jamf Pro resources.
+9. **Define Your Resources**: Use Terraform resource definitions to manage your Jamf Pro resources.
 
-8. **Create a New Branch**: When starting work on a new feature, bug fix, or any other change, create a new branch with an appropriate prefix. This naming convention is enforced by our workflows and helps categorize the type of work being done.
+10. **Create a New Branch**: When starting work on a new feature, bug fix, or any other change, create a new branch with an appropriate prefix. This naming convention is enforced by our workflows and helps categorize the type of work being done.
 
 Use one of the following prefixes based on the nature of your work:
 
@@ -299,11 +356,11 @@ To create a new branch:
 
 This naming convention helps our automated workflows identify the type of change and process it accordingly. It also makes it easier for team members to understand the purpose of each branch at a glance.
 
-9. **Make Changes and Push**: Make your changes and push to GitHub.
+11. **Make Changes and Push**: Make your changes and push to GitHub.
 
-10. **Test in Sandbox**: The `01 - terraform testing: sandbox` workflow will automatically run.
+12. **Test in Sandbox**: The `01 - terraform testing: sandbox` workflow will automatically run.
 
-11. **Promote to Sandbox**: After testing your changes in your feature branch, you can promote them to the Sandbox environment. This process involves creating a pull request to merge your feature branch into the `sandbox` branch. Here's how to do it:
+13. **Promote to Sandbox**: After testing your changes in your feature branch, you can promote them to the Sandbox environment. This process involves creating a pull request to merge your feature branch into the `sandbox` branch. Here's how to do it:
 
 - Ensure all your changes are committed and pushed to your feature branch.
 
@@ -334,9 +391,9 @@ Remember: Always verify that the workflow completes successfully. If there are a
 
 By following this process, you ensure that your changes are properly promoted to the Sandbox environment and applied in a controlled, automated manner.
 
-12. **Promote to Staging**: Now manually trigger the `02-release-and-plan-staging.yml` workflow and approve the pull request to merge the release branch into the `staging` branch after change review.
+14. **Promote to Staging**: Now manually trigger the `02-release-and-plan-staging.yml` workflow and approve the pull request to merge the release branch into the `staging` branch after change review.
 
-13. **Apply to Staging**:
+15. **Apply to Staging**:
 
 This project uses an automated process for creating versions and preparing releases when promoting changes from the Sandbox environment to Staging. This process is implemented in the `03 - release and terraform plan to: staging` workflow. Here's an overview of how it works:
 

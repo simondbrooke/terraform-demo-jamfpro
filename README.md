@@ -88,28 +88,36 @@ Each environment has its own Terraform Cloud workspace:
    
    This follows the [Conventional Commits](https://sentenz.github.io/convention/convention/conventional-commits/) specification for commit messages. These branches are merged into the `sandbox` branch for testing.
 
-2. Changes are automatically checked for linting and formatting as well as Terraform planned against the Sandbox environment when pushed from these branches to sandbox by `01-terraform-plan-sandbox.yml`.
+2. Automated Terraform Planning and PR Management:
+
+   Upon pushing changes to branches matching patterns like feat-*, fix-*, ci-*, etc., the `01-terraform-plan-sandbox.yml` workflow is triggered automatically.
+   This workflow performs the following actions:
+   - Runs a Terraform speculative plan against the Sandbox environment.
+   - Automatically creates a new Pull Request (PR) to the sandbox branch if one doesn't exist, or updates an existing PR.
+   - Adds or updates a comment in the PR with the results of the Terraform plan, including the number of resources to be added, changed, or destroyed.
+   - Provides a link to the full plan details in Terraform Cloud within the PR comment.
+   This process ensures that every push to a feature branch is automatically checked, planned, and documented, facilitating easier review and understanding of proposed changes before merging into the sandbox branch.
 
 3. Once all desired changes have been tested, the short-lived branch is PR'd into the sandbox branch.
    Once merged into the sandbox branch, the changes are automatically applied to the Sandbox environment by `02-terraform-apply-sandbox.yml`.
 
 4. Once the changes are applied to the Sandbox environment, promotion to Staging begins:
-   a. The `03 - release and terraform plan to: staging` workflow is manually triggered from the sandbox branch.
-   b. This workflow creates a new version and a new release branch (e.g., `release-v1.2.3`).
-   c. It then generates a Terraform plan for the Staging environment using this release branch.
-   d. A pull request is created from the release branch to the staging branch, with the plan for review.
+   - The `03 - release and terraform plan to: staging` workflow is manually triggered from the sandbox branch.
+   - This workflow creates a new version and a new release branch (e.g., `release-v1.2.3`).
+   - It then generates a Terraform plan for the Staging environment using this release branch.
+   - A pull request is created from the release branch to the staging branch, with the plan for review.
 
 5. After the pull request is reviewed and approved:
-   a. The pull request is merged into the staging branch.
-   b. This triggers the `04-terraform-apply-staging` workflow.
-   c. The workflow checks that the merge is from a release branch (starting with `release-v`), then applies the Terraform changes to the Staging environment.
-   d. After successful apply, the release branch is cleaned up (deleted).
+   - The pull request is merged into the staging branch.
+   - This triggers the `04-terraform-apply-staging` workflow.
+   - The workflow checks that the merge is from a release branch (starting with `release-v`), then applies the Terraform changes to the Staging environment.
+   - After successful apply, the release branch is cleaned up (deleted).
 
 6. The process for promoting to Production follows a similar pattern:
-   a. A manual trigger of the `05 - release and terraform plan to: production` workflow is done from the staging branch.
-   b. A new release branch is created for production promotion.
-   c. After review and approval, the changes are applied to the Production environment.
-   d. The production release branch is cleaned up after successful apply.
+   - A manual trigger of the `05 - release and terraform plan to: production` workflow is done from the staging branch.
+   - A new release branch is created for production promotion.
+   - After review and approval, the changes are applied to the Production environment.
+   - The production release branch is cleaned up after successful apply.
 This approach ensures that each promotion to staging or production is associated with a specific release version, allowing for version tracking and potential rollback if needed.
 
 ## Branching Strategy
