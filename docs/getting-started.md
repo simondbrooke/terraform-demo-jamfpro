@@ -213,7 +213,7 @@ Steps:
 - Check the box for "Allow GitHub Actions to create and approve pull requests".
 - Click Save.
 
-![Workflow Permissions](./docs/media/screenshots/workflow-permissions.png)
+![Workflow Permissions](./media/screenshots/workflow-permissions.png)
 
 6. ### Create a New Ruleset to Protect `staging` and `production` Branches
 
