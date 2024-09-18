@@ -215,27 +215,48 @@ Steps:
 
 ![Workflow Permissions](./docs/media/screenshots/workflow-permissions.png)
 
-Next go to settings -> rules - > rulesets and create a new ruleset
+6. ### Create a New Ruleset to Protect `staging` and `production` Branches
 
-give it a name of your choice e.g `ruleset-protect-staging+production`
+1. **Navigate to Repository Settings**:
+   - Go to your repository on GitHub.
+   - Click on **Settings** in the repository navigation.
 
-Set in the `Bypass list` - `Organization admin` as an exemption.
+2. **Access Rulesets**:
+   - In the **Settings** sidebar, scroll down and click on **Rules**.
+   - Then, select **Rulesets**.
 
-Set the target branches
+3. **Create a New Ruleset**:
+   - Click the **New ruleset** button to create a new branch protection ruleset.
 
-`staging`
-`production`
+4. **Give the Ruleset a Name**:
+   - In the **Name** field, enter a name of your choice, such as `ruleset-protect-staging+production`.
 
-Now set the following branch rules
+5. **Set the Bypass List**:
+   - In the **Bypass list** section, add `Organization admin` as an exemption. This will allow organization admins to bypass the rules if necessary.
 
-`Restrict deletions`
-`Require a pull request before merging`
-- Required approvals - 1
-- Dismiss stale pull request approvals when new commits are pushed
-- Require approval of the most recent reviewable push
-- Require conversation resolution before merging
-`Require status checks to pass`
-`Block force pushes`
+6. **Target Branches**:
+   - Under **Target branches**, add the branches you want to protect:
+     - `staging`
+     - `production`
+
+7. **Configure Branch Rules**:
+   - Set the following branch protection rules:
+
+     - **Restrict deletions**: Enable this option to prevent deletion of the `staging` and `production` branches.
+     
+     - **Require a pull request before merging**: Enable this option to ensure that all changes are reviewed before merging.
+       - **Required approvals**: Set this to `1` to ensure at least one approval is required for merging.
+       - **Dismiss stale pull request approvals when new commits are pushed**: Enable this option to dismiss previous approvals when new commits are made.
+       - **Require approval of the most recent reviewable push**: Enable this option to ensure that only the most recent commit is reviewed and approved.
+       - **Require conversation resolution before merging**: Enable this option to ensure that all review conversations are resolved before the pull request can be merged.
+
+     - **Require status checks to pass**: Enable this to ensure that all required status checks (e.g., CI/CD tests) pass before a pull request is merged.
+
+     - **Block force pushes**: Enable this to block any force pushes to the `staging` and `production` branches, ensuring that no one can overwrite the branch history.
+
+8. **Save the Ruleset**:
+   - After configuring all of the rules, click **Create** or **Save** to apply the new ruleset to the `staging` and `production` branches.
+
 
 6. **Update Terraform Variables**: Modify the `terraform` block in your `.tf` files to match your Jamf Pro instance details. For example:
 
