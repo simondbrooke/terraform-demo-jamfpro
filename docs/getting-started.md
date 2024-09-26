@@ -88,6 +88,7 @@ Setup an account within terraform cloud if you havent already -
 And create a new terraform cloud organization. Organizations are privately shared spaces for teams to collaborate on infrastructure.
 ![tfc-org](./media/screenshots/create-tfc-org.png)
 
+
 - **Create Terraform Cloud Project**:
    Create a new project in Terraform Cloud for your Jamf Pro infrastructure.
 ![tfc-project](./media/screenshots/create-tfc-project.png)
@@ -160,6 +161,7 @@ Within TFC go to account settings -> tokens -> generate an api token
 Give this token a lifespan you are happy with and save it for later in use with github actions
 
 ![tfc-tokens](./media/screenshots/tfc-tokens.png)
+
 
 3. **Configure Github Secrets**: Set up the following secrets in your GitHub repository settings:
 
