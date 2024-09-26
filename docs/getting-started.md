@@ -109,6 +109,7 @@ Each workspace holds a unique state for the correlating jamf pro environment.
    Tag each of these workspaces with the "jamf_pro" tag. This allows you to easily identify and group these workspaces and it will allow us to apply terraform
    variable sets (collections of variables true across multiple jamf pro environments)
 
+
 - **Set Up Variable Set for Common Variables**:
    Create a variable set for variables that are common across all environments, set the following variables as `Terraform variable`:
    
