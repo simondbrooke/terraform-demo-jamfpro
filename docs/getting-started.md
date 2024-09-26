@@ -5,9 +5,11 @@
 Before you start working on this project, you'll need to install several tools to ensure your development environment is properly set up.
 
 ### 1. Install an IDE (e.g., Visual Studio Code)
+
 You will need an Integrated Development Environment (IDE) to write and manage your code efficiently. We recommend [Visual Studio Code (VSCode)](https://code.visualstudio.com/) because of its flexibility and a wide range of available extensions for Terraform and Git integration.
 
 #### Recommended VSCode Extensions:
+
 - **Terraform**: Provides syntax highlighting, linting, and IntelliSense for Terraform files.
   - [HashiCorp Terraform Extension](https://marketplace.visualstudio.com/items?itemName=HashiCorp.terraform)
 - **YAML**: Useful for working with GitHub Actions workflows.
@@ -18,6 +20,7 @@ You will need an Integrated Development Environment (IDE) to write and manage yo
   - [Prettier Extension](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
 
 ### 2. Install Git
+
 Git is essential for version control and managing your project’s source code. Install it from the official website based on your operating system:
 
 - [Git for Windows](https://git-scm.com/download/win)
@@ -46,7 +49,9 @@ To verify that the configuration was successful, run:
 ```bash
 git config --global --list
 ```
+
 ### 4. Install Terraform
+
 Terraform is required to manage the infrastructure resources in this project. You can download it from the official Terraform website:
 
 - [Download Terraform](https://www.terraform.io/downloads.html)
@@ -56,7 +61,6 @@ After installing Terraform, verify the installation by running the following com
 ```bash
 terraform --version
 ```
-
 
 ## Project Setup
 
@@ -73,16 +77,24 @@ git push -u origin main
 
 Replace your-username and your-new-repo with your GitHub username and the name of your new repository.
 
-2. **Configure Terraform Cloud Workspaces**: 
+2. **Configure Terraform Cloud Workspaces**:
 
-To manage your Jamf Pro infrastructure across different environments, you'll need to set up workspaces in Terraform Cloud. Follow these steps:
+To manage your Jamf Pro infrastructure across different environments, you'll need to set up a terraform cloud organization, project and 3 workspaces. You will require a seperate workspace for each jamf pro envionrment you want to manage with terraform.
 
-- **Create Project**:
+Setup an account within terraform cloud if you havent already -
+
+- [Terraform Cloud](https://app.terraform.io/)
+
+And create a new terraform cloud organization. Organizations are privately shared spaces for teams to collaborate on infrastructure.
+![tfc-org](./media/screenshots/create-tfc-org.png)
+
+- **Create Terraform Cloud Project**:
    Create a new project in Terraform Cloud for your Jamf Pro infrastructure.
+![tfc-project](./media/screenshots/create-tfc-project.png)
 
-- **Create Workspaces**:
+- **Create Terraform Cloud Workspaces**:
 
-  Assigned to your project Create three workspaces in Terraform Cloud:
+  Assigned to your project three workspaces in Terraform Cloud with the following names:
 
    - `terraform-jamfpro-sandbox`
    - `terraform-jamfpro-staging`
@@ -90,8 +102,13 @@ To manage your Jamf Pro infrastructure across different environments, you'll nee
 
    Use `API-driven workflow` for each workspace.
 
+Each workspace holds a unique state for the correlating jamf pro environment.
+![tfc-project](./media/screenshots/create-tfc-workspace.png)
+
 - **Tag Workspaces**:
-   Tag each of these workspaces with the "jamf_pro" tag. This allows you to easily identify and group these workspaces.
+   Tag each of these workspaces with the "jamf_pro" tag. This allows you to easily identify and group these workspaces and it will allow us to apply terraform
+   variable sets (collections of variables true across multiple jamf pro environments)
+
 
 - **Set Up Variable Set for Common Variables**:
    Create a variable set for variables that are common across all environments, set the following variables as `Terraform variable`:
@@ -131,16 +148,6 @@ To manage your Jamf Pro infrastructure across different environments, you'll nee
    b. Assign the appropriate permissions to team members based on their roles and the environment.
    c. Consider restricting access to production workspaces to a smaller group of trusted team members.
 
-6. **Version Control Settings**:
-   Configure version control settings for each workspace:
-   
-   a. Go to the "Version Control" section in the workspace settings.
-   b. Connect the workspace to your GitHub repository.
-   c. Set the VCS branch to match your environment branches (e.g., "sandbox", "staging", "production").
-
-Remember, keeping your Terraform Cloud configuration secure is crucial. Always use environment variables for sensitive information, and never commit secrets to your version control system.
-
-By following these steps, you'll have a well-organized and secure setup in Terraform Cloud, with proper separation between environments and efficient management of common variables.
 
 3. **Configure Github Secrets**: Set up the following secrets in your GitHub repository settings:
 
@@ -194,7 +201,9 @@ b. For Slack:
 
 These webhook URLs are used in the Send Notification workflow (send-notification.yml) to send deployment status updates to your team. The workflow determines which service to use based on the notification_channel input.
 
-4. **Configure Terraform Cloud Secrets**: Set up the following secrets in your Terraform Cloud workspace variable settings for each environment (Sandbox, Staging, Production):
+4. **Configure Terraform Cloud Secrets**:
+
+Set up the following secrets in your Terraform Cloud workspace variable settings for each environment (Sandbox, Staging, Production):
     - `JAMFPRO_INSTANCE_FQDN`: Your Jamf Pro instance URL. For example: `https://your-instance.jamfcloud.com`.
     - `JAMFPRO_AUTH_METHOD`: Can be either `basic` or `oauth2`.
     - `JAMFPRO_CLIENT_ID`: Your Jamf Pro client id when `JAMFPRO_AUTH_METHOD` is set to 'oauth2'.
@@ -205,6 +214,7 @@ These webhook URLs are used in the Send Notification workflow (send-notification
    Note: For Terraform Cloud, when setting variables you do not need to prefix your env vars with `TF_VAR_` as Terraform Cloud automatically does this for you. Additionally, ensure to select the variable category as `Terraform variable`, with the HCL tickbox unchecked.
 
 5. **GitHub Repository-Level Setting**:
+
 At the repository level, you need to explicitly allow GitHub Actions to create or approve pull requests by adjusting the workflow permissions for your demo repository.
 
 Steps:
@@ -292,7 +302,7 @@ Steps:
       cloud {
         organization = "deploymenttheory"
         workspaces {
-          tags = ["Jamf Pro"]
+          tags = ["jamf_pro"]
         }
       }
     }
@@ -308,7 +318,7 @@ Steps:
      required_providers {
        jamfpro = {
          source  = "deploymenttheory/jamfpro"
-         version = "0.1.12"
+         version = "0.3.1"
        }
      }
    }
@@ -333,10 +343,10 @@ Use one of the following prefixes based on the nature of your work:
 
 To create a new branch:
 
-1. Ensure you're on the main branch and it's up to date:
+1. Ensure you're on the default branch (sandbox) and it's up to date:
    ```bash
-   git checkout main
-   git pull origin main
+   git checkout sandbox
+   git pull origin sandbox
    ```
 
 2. Create and switch to a new branch with an appropriate prefix:
@@ -347,7 +357,7 @@ To create a new branch:
 
    For example:
    ```bash
-   git checkout -b feat-add-user-authentication
+   git checkout -b feat-add-policy
    ```
 
 3. Make your changes on this new branch.
@@ -361,7 +371,7 @@ This naming convention helps our automated workflows identify the type of change
 
 11. **Make Changes and Push**: Make your changes and push to GitHub.
 
-12. **Test in Sandbox**: The `01 - terraform testing: sandbox` workflow will automatically run.
+12. **Test in Sandbox**: The `01 - terraform testing: sandbox` workflow will automatically run and perform terraform plans and linting upon each commit.
 
 13. **Promote to Sandbox**: After testing your changes in your feature branch, you can promote them to the Sandbox environment. This process involves creating a pull request to merge your feature branch into the `sandbox` branch. Here's how to do it:
 
