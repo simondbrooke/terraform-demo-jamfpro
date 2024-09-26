@@ -62,7 +62,6 @@ After installing Terraform, verify the installation by running the following com
 terraform --version
 ```
 
-
 ## Project Setup
 
 1. **Create a New Repository**: Start by forking or cloning this repository into your GitHub account. Ensure that you include all branches when you fork.
@@ -78,7 +77,8 @@ git push -u origin main
 
 Replace your-username and your-new-repo with your GitHub username and the name of your new repository.
 
-2.**Configure Terraform Cloud Workspaces**:
+2. **Configure Terraform Cloud Workspaces**:
+
 To manage your Jamf Pro infrastructure across different environments, you'll need to set up a terraform cloud organization, project and 3 workspaces. You will require a seperate workspace for each jamf pro envionrment you want to manage with terraform.
 
 Setup an account within terraform cloud if you havent already -
@@ -94,7 +94,7 @@ And create a new terraform cloud organization. Organizations are privately share
 
 - **Create Terraform Cloud Workspaces**:
 
-  Assigned to your project Create three workspaces in Terraform Cloud:
+  Assigned to your project three workspaces in Terraform Cloud with the following names:
 
    - `terraform-jamfpro-sandbox`
    - `terraform-jamfpro-staging`
@@ -102,8 +102,12 @@ And create a new terraform cloud organization. Organizations are privately share
 
    Use `API-driven workflow` for each workspace.
 
+Each workspace holds a unique state for the correlating jamf pro environment.
+![tfc-project](./media/screenshots/create-tfc-workspace.png)
+
 - **Tag Workspaces**:
-   Tag each of these workspaces with the "jamf_pro" tag. This allows you to easily identify and group these workspaces.
+   Tag each of these workspaces with the "jamf_pro" tag. This allows you to easily identify and group these workspaces and it will allow us to apply terraform
+   variable sets (collections of variables true across multiple jamf pro environments)
 
 - **Set Up Variable Set for Common Variables**:
    Create a variable set for variables that are common across all environments, set the following variables as `Terraform variable`:
@@ -143,16 +147,6 @@ And create a new terraform cloud organization. Organizations are privately share
    b. Assign the appropriate permissions to team members based on their roles and the environment.
    c. Consider restricting access to production workspaces to a smaller group of trusted team members.
 
-6. **Version Control Settings**:
-   Configure version control settings for each workspace:
-   
-   a. Go to the "Version Control" section in the workspace settings.
-   b. Connect the workspace to your GitHub repository.
-   c. Set the VCS branch to match your environment branches (e.g., "sandbox", "staging", "production").
-
-Remember, keeping your Terraform Cloud configuration secure is crucial. Always use environment variables for sensitive information, and never commit secrets to your version control system.
-
-By following these steps, you'll have a well-organized and secure setup in Terraform Cloud, with proper separation between environments and efficient management of common variables.
 
 3. **Configure Github Secrets**: Set up the following secrets in your GitHub repository settings:
 
@@ -206,7 +200,9 @@ b. For Slack:
 
 These webhook URLs are used in the Send Notification workflow (send-notification.yml) to send deployment status updates to your team. The workflow determines which service to use based on the notification_channel input.
 
-4. **Configure Terraform Cloud Secrets**: Set up the following secrets in your Terraform Cloud workspace variable settings for each environment (Sandbox, Staging, Production):
+4. **Configure Terraform Cloud Secrets**:
+
+Set up the following secrets in your Terraform Cloud workspace variable settings for each environment (Sandbox, Staging, Production):
     - `JAMFPRO_INSTANCE_FQDN`: Your Jamf Pro instance URL. For example: `https://your-instance.jamfcloud.com`.
     - `JAMFPRO_AUTH_METHOD`: Can be either `basic` or `oauth2`.
     - `JAMFPRO_CLIENT_ID`: Your Jamf Pro client id when `JAMFPRO_AUTH_METHOD` is set to 'oauth2'.
@@ -217,6 +213,7 @@ These webhook URLs are used in the Send Notification workflow (send-notification
    Note: For Terraform Cloud, when setting variables you do not need to prefix your env vars with `TF_VAR_` as Terraform Cloud automatically does this for you. Additionally, ensure to select the variable category as `Terraform variable`, with the HCL tickbox unchecked.
 
 5. **GitHub Repository-Level Setting**:
+
 At the repository level, you need to explicitly allow GitHub Actions to create or approve pull requests by adjusting the workflow permissions for your demo repository.
 
 Steps:
