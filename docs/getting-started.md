@@ -5,9 +5,11 @@
 Before you start working on this project, you'll need to install several tools to ensure your development environment is properly set up.
 
 ### 1. Install an IDE (e.g., Visual Studio Code)
+
 You will need an Integrated Development Environment (IDE) to write and manage your code efficiently. We recommend [Visual Studio Code (VSCode)](https://code.visualstudio.com/) because of its flexibility and a wide range of available extensions for Terraform and Git integration.
 
 #### Recommended VSCode Extensions:
+
 - **Terraform**: Provides syntax highlighting, linting, and IntelliSense for Terraform files.
   - [HashiCorp Terraform Extension](https://marketplace.visualstudio.com/items?itemName=HashiCorp.terraform)
 - **YAML**: Useful for working with GitHub Actions workflows.
@@ -18,6 +20,7 @@ You will need an Integrated Development Environment (IDE) to write and manage yo
   - [Prettier Extension](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
 
 ### 2. Install Git
+
 Git is essential for version control and managing your project’s source code. Install it from the official website based on your operating system:
 
 - [Git for Windows](https://git-scm.com/download/win)
@@ -46,7 +49,9 @@ To verify that the configuration was successful, run:
 ```bash
 git config --global --list
 ```
+
 ### 4. Install Terraform
+
 Terraform is required to manage the infrastructure resources in this project. You can download it from the official Terraform website:
 
 - [Download Terraform](https://www.terraform.io/downloads.html)
@@ -73,14 +78,21 @@ git push -u origin main
 
 Replace your-username and your-new-repo with your GitHub username and the name of your new repository.
 
-2. **Configure Terraform Cloud Workspaces**: 
+2.**Configure Terraform Cloud Workspaces**:
+To manage your Jamf Pro infrastructure across different environments, you'll need to set up a terraform cloud organization, project and 3 workspaces. You will require a seperate workspace for each jamf pro envionrment you want to manage with terraform.
 
-To manage your Jamf Pro infrastructure across different environments, you'll need to set up workspaces in Terraform Cloud. Follow these steps:
+Setup an account within terraform cloud if you havent already -
 
-- **Create Project**:
+- [Terraform Cloud](https://app.terraform.io/)
+
+And create a new terraform cloud organization. Organizations are privately shared spaces for teams to collaborate on infrastructure.
+![tfc-org](./media/screenshots/create-tfc-org.png)
+
+- **Create Terraform Cloud Project**:
    Create a new project in Terraform Cloud for your Jamf Pro infrastructure.
+![tfc-project](./media/screenshots/create-tfc-project.png)
 
-- **Create Workspaces**:
+- **Create Terraform Cloud Workspaces**:
 
   Assigned to your project Create three workspaces in Terraform Cloud:
 
