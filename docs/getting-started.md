@@ -60,8 +60,9 @@ terraform --version
 
 ## Project Setup
 
-1. **Create a New Repository**: Start by forking or cloning this repository into your GitHub account.
-2. **Clone and Push to Your New Repository**: If cloning then take a local copy of this repo and then push it to your newly created repository:
+1. **Create a New Repository**: Start by forking or cloning this repository into your GitHub account. Ensure that you include all branches when you fork.
+
+**Optional: Clone and Push to Your New Repository**: If cloning then take a local copy of this repo and then push it to your newly created repository:
 
 ```bash
 git clone https://github.com/deploymenttheory/terraform-demo-jamfpro.git
@@ -90,7 +91,7 @@ To manage your Jamf Pro infrastructure across different environments, you'll nee
    Use `API-driven workflow` for each workspace.
 
 - **Tag Workspaces**:
-   Tag each of these workspaces with the "jamfpro" tag. This allows you to easily identify and group these workspaces.
+   Tag each of these workspaces with the "jamf_pro" tag. This allows you to easily identify and group these workspaces.
 
 - **Set Up Variable Set for Common Variables**:
    Create a variable set for variables that are common across all environments, set the following variables as `Terraform variable`:
@@ -169,6 +170,8 @@ Optional:
 - `MSTEAMS_WEBHOOK_URL`: Your Microsoft Teams webhook URL for sending notifications.
 - `SLACK_WEBHOOK_URL`: Your Slack webhook URL for sending notifications.
 
+(If you are not planning to integrate with either ms teams for slack then remove these steps from your pipelines.)
+
 To set up the notification webhooks:
 
 a. For Microsoft Teams:
@@ -189,7 +192,7 @@ b. For Slack:
 - In your GitHub repository, go to Settings > Secrets and variables > Actions.
 - Click "New repository secret", name it SLACK_WEBHOOK_URL, and paste the webhook URL as the value.
 
-These webhook URLs are used in the Send Notification workflow (send-notification.yml) to send deployment status updates to your team. The workflow determines which service to use based on the notification_channel input. Here's a snippet of how it's used:
+These webhook URLs are used in the Send Notification workflow (send-notification.yml) to send deployment status updates to your team. The workflow determines which service to use based on the notification_channel input.
 
 4. **Configure Terraform Cloud Secrets**: Set up the following secrets in your Terraform Cloud workspace variable settings for each environment (Sandbox, Staging, Production):
     - `JAMFPRO_INSTANCE_FQDN`: Your Jamf Pro instance URL. For example: `https://your-instance.jamfcloud.com`.
