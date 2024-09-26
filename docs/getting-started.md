@@ -88,6 +88,7 @@ Setup an account within terraform cloud if you havent already -
 And create a new terraform cloud organization. Organizations are privately shared spaces for teams to collaborate on infrastructure.
 ![tfc-org](./media/screenshots/create-tfc-org.png)
 
+
 - **Create Terraform Cloud Project**:
    Create a new project in Terraform Cloud for your Jamf Pro infrastructure.
 ![tfc-project](./media/screenshots/create-tfc-project.png)
@@ -126,6 +127,8 @@ Each workspace holds a unique state for the correlating jamf pro environment.
 
    f. Apply this variable set to all three Jamf Pro workspaces.
 
+![tfc-variable-set](./media/screenshots/tfc-variable-set.png)
+
 - **Configure Workspace-Specific Variables**:
    For each workspace, set the following variables as `Terraform variable`:
 
@@ -141,6 +144,8 @@ Each workspace holds a unique state for the correlating jamf pro environment.
 
    d. Mark sensitive variables (like passwords and secrets) as sensitive.
 
+![tfc-workspace-vars](./media/screenshots/tfc-workspace-vars.png)
+
 - **Access Controls**:
    Set up appropriate access controls for each workspace:
    
@@ -148,10 +153,19 @@ Each workspace holds a unique state for the correlating jamf pro environment.
    b. Assign the appropriate permissions to team members based on their roles and the environment.
    c. Consider restricting access to production workspaces to a smaller group of trusted team members.
 
+- **Generate Terraform Cloud API token**:
+This token will be used by github actions to communicate with terraform cloud.
+
+Within TFC go to account settings -> tokens -> generate an api token
+
+Give this token a lifespan you are happy with and save it for later in use with github actions
+
+![tfc-tokens](./media/screenshots/tfc-tokens.png)
+
 
 3. **Configure Github Secrets**: Set up the following secrets in your GitHub repository settings:
 
-- `TF_API_TOKEN`: Your Terraform Cloud API token for Terraform Cloud backend. this can be generated from the Terraform Cloud UI under account settings -> Tokens -> create api token.
+- `TF_API_TOKEN`: Your Terraform Cloud API token for Terraform Cloud backend.
 - `PAT_TOKEN`: Your GitHub Personal Access Token for branch management operations.
 
 To set up the PAT_TOKEN:
@@ -204,14 +218,15 @@ These webhook URLs are used in the Send Notification workflow (send-notification
 4. **Configure Terraform Cloud Secrets**:
 
 Set up the following secrets in your Terraform Cloud workspace variable settings for each environment (Sandbox, Staging, Production):
-    - `JAMFPRO_INSTANCE_FQDN`: Your Jamf Pro instance URL. For example: `https://your-instance.jamfcloud.com`.
-    - `JAMFPRO_AUTH_METHOD`: Can be either `basic` or `oauth2`.
-    - `JAMFPRO_CLIENT_ID`: Your Jamf Pro client id when `JAMFPRO_AUTH_METHOD` is set to 'oauth2'.
-    - `JAMFPRO_CLIENT_SECRET`: Your Jamf Pro client secret when `JAMFPRO_AUTH_METHOD` is set to 'oauth2'.
-    - `JAMFPRO_BASIC_AUTH_USERNAME`: Your Jamf Pro username when `JAMFPRO_AUTH_METHOD` is set to 'basic'.
-    - `JAMFPRO_BASIC_AUTH_PASSWORD`: Your Jamf Pro user password when `JAMFPRO_AUTH_METHOD` is set to 'basic'.
 
-   Note: For Terraform Cloud, when setting variables you do not need to prefix your env vars with `TF_VAR_` as Terraform Cloud automatically does this for you. Additionally, ensure to select the variable category as `Terraform variable`, with the HCL tickbox unchecked.
+- `JAMFPRO_INSTANCE_FQDN`: Your Jamf Pro instance URL. For example: `https://your-instance.jamfcloud.com`.
+- `JAMFPRO_AUTH_METHOD`: Can be either `basic` or `oauth2`.
+- `JAMFPRO_CLIENT_ID`: Your Jamf Pro client id when `JAMFPRO_AUTH_METHOD` is set to 'oauth2'.
+- `JAMFPRO_CLIENT_SECRET`: Your Jamf Pro client secret when `JAMFPRO_AUTH_METHOD` is set to 'oauth2'.
+- `JAMFPRO_BASIC_AUTH_USERNAME`: Your Jamf Pro username when `JAMFPRO_AUTH_METHOD` is set to 'basic'.
+- `JAMFPRO_BASIC_AUTH_PASSWORD`: Your Jamf Pro user password when `JAMFPRO_AUTH_METHOD` is set to 'basic'.
+
+Note: For Terraform Cloud, when setting variables you do not need to prefix your env vars with `TF_VAR_` as Terraform Cloud automatically does this for you. Additionally, ensure to select the variable category as `Terraform variable`, with the HCL tickbox unchecked.
 
 5. **GitHub Repository-Level Setting**:
 
