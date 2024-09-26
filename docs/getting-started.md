@@ -292,7 +292,7 @@ Steps:
       cloud {
         organization = "deploymenttheory"
         workspaces {
-          tags = ["Jamf Pro"]
+          tags = ["jamf_pro"]
         }
       }
     }
@@ -308,7 +308,7 @@ Steps:
      required_providers {
        jamfpro = {
          source  = "deploymenttheory/jamfpro"
-         version = "0.1.12"
+         version = "0.3.1"
        }
      }
    }
@@ -333,10 +333,10 @@ Use one of the following prefixes based on the nature of your work:
 
 To create a new branch:
 
-1. Ensure you're on the main branch and it's up to date:
+1. Ensure you're on the default branch (sandbox) and it's up to date:
    ```bash
-   git checkout main
-   git pull origin main
+   git checkout sandbox
+   git pull origin sandbox
    ```
 
 2. Create and switch to a new branch with an appropriate prefix:
@@ -347,7 +347,7 @@ To create a new branch:
 
    For example:
    ```bash
-   git checkout -b feat-add-user-authentication
+   git checkout -b feat-add-policy
    ```
 
 3. Make your changes on this new branch.
@@ -361,7 +361,7 @@ This naming convention helps our automated workflows identify the type of change
 
 11. **Make Changes and Push**: Make your changes and push to GitHub.
 
-12. **Test in Sandbox**: The `01 - terraform testing: sandbox` workflow will automatically run.
+12. **Test in Sandbox**: The `01 - terraform testing: sandbox` workflow will automatically run and perform terraform plans and linting upon each commit.
 
 13. **Promote to Sandbox**: After testing your changes in your feature branch, you can promote them to the Sandbox environment. This process involves creating a pull request to merge your feature branch into the `sandbox` branch. Here's how to do it:
 
