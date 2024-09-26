@@ -166,26 +166,6 @@ Give this token a lifespan you are happy with and save it for later in use with 
 3. **Configure Github Secrets**: Set up the following secrets in your GitHub repository settings:
 
 - `TF_API_TOKEN`: Your Terraform Cloud API token for Terraform Cloud backend.
-- `PAT_TOKEN`: Your GitHub Personal Access Token for branch management operations.
-
-To set up the PAT_TOKEN:
-a. Go to your GitHub Settings > Developer settings > Personal access tokens > Fine-grained tokens.
-b. Click "Generate new token".
-c. Give your token a descriptive name, e.g., "Terraform Jamf Pro Config Branch Management".
-d. Set the expiration as per your security policies.
-e. Under "Repository access", select "Only select repositories" and choose the repository you're setting up.
-f. Under "Permissions", grant the following permissions:
-
-- Repository permissions:
-- Contents: Read and write (This allows branch management)
-- Metadata: Read-only (This is required for API operations)
-- Organization permissions:
-- Members: Read-only (If working within an organization)
-
-g. Click "Generate token" and copy the token immediately.
-h. In your repository, go to Settings > Secrets and variables > Actions.
-i. Click "New repository secret", name it PAT_TOKEN, and paste your token as the value.
-
 Optional:
 
 - `MSTEAMS_WEBHOOK_URL`: Your Microsoft Teams webhook URL for sending notifications.
