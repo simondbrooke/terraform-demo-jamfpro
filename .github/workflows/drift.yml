@@ -6,7 +6,7 @@ on:
   workflow_dispatch:  # Allow manual triggers
 
 env:
-  TF_CLOUD_ORGANIZATION: "deploymenttheory"
+  TF_CLOUD_ORGANIZATION: "SimonDBrooke"
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
   CONFIG_DIRECTORY: "workload/terraform/jamfpro"
   
@@ -25,7 +25,7 @@ jobs:
       TF_WORKSPACE: "terraform-jamfpro-${{ matrix.environment }}"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
         
       - name: Harden Runner
         uses: step-security/harden-runner@v2.10.1
