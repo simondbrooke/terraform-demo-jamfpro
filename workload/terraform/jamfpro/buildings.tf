@@ -20,7 +20,7 @@
 # }
 
  resource "jamfpro_building" "jamfpro_building_003" {
-  name            = "SDB3"
+  name            = "Crackhead Central"
    street_address1 = "Ground Floor, Turbine Hall A, Circus Rd W, Nine Elms"
   street_address2 = "Suite 1100"
    city            = "London"
